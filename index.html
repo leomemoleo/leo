@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>42 DİL Belge Oluşturma Araçları</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 50px;
+            margin-top: 30px;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .tools-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            width: 100%;
+            margin-bottom: 50px;
+        }
+
+        .tool-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+        }
+
+        .tool-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .tool-card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+
+        .tool-card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .tool-features {
+            list-style: none;
+            text-align: left;
+            width: 100%;
+            margin-top: auto;
+        }
+
+        .tool-features li {
+            padding: 5px 0;
+            color: #555;
+            font-size: 0.9em;
+        }
+
+        .tool-features li:before {
+            content: "✓ ";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .footer {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .footer h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .footer p {
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .tools-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📄 Belge Oluşturma Araçları</h1>
+        <p>Profesyonel belgelerinizi kolayca oluşturun</p>
+    </div>
+
+    <div class="tools-container">
+        <a href="translation-template/index.html" class="tool-card">
+            <div class="tool-icon">📋</div>
+            <h2>Tercüme Şablonu</h2>
+            <p>Yeminli tercüme belgeleri için profesyonel şablonlar oluşturun</p>
+            <ul class="tool-features">
+                <li>Resmi tercüme formatı</li>
+                <li>Özelleştirilebilir alanlar</li>
+                <li>PDF ve PNG olarak indirme</li>
+                <li>Damga ve imza alanları</li>
+            </ul>
+        </a>
+
+        <a href="cv-generator/index.html" class="tool-card">
+            <div class="tool-icon">👤</div>
+            <h2>CV Oluşturucu</h2>
+            <p>Profesyonel özgeçmiş ve CV tasarımları hazırlayın</p>
+            <ul class="tool-features">
+                <li>Modern tasarım şablonları</li>
+                <li>Fotoğraf ekleme</li>
+                <li>Birden fazla bölüm</li>
+                <li>Anında önizleme</li>
+            </ul>
+        </a>
+
+        <a href="certificate-generator/index.html" class="tool-card">
+            <div class="tool-icon">🏆</div>
+            <h2>Sertifika Oluşturucu</h2>
+            <p>Eğitim, katılım ve başarı sertifikaları oluşturun</p>
+            <ul class="tool-features">
+                <li>Farklı sertifika türleri</li>
+                <li>Özel çerçeveler ve tasarımlar</li>
+                <li>Logo ekleme desteği</li>
+                <li>Yüksek kaliteli çıktı</li>
+            </ul>
+        </a>
+    </div>
+
+    <div class="footer">
+        <h3>42 DİL TERCÜME BÜROSU</h3>
+        <p>Profesyonel tercüme ve belge hazırlama hizmetleri</p>
+        <p><a href="https://www.42dil.com" target="_blank">www.42dil.com</a></p>
+        <p style="margin-top: 15px; font-size: 0.9em; color: #999;">
+            Tüm araçlar tarayıcınızda çalışır, hiçbir veri sunucuya gönderilmez.
+        </p>
+    </div>
+</body>
+</html>

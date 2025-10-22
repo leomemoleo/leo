@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sertifika Oluşturucu</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 20px;
+        }
+
+        .back-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            transition: background 0.3s;
+        }
+
+        .back-button:hover {
+            background: #5568d3;
+        }
+
+        .form-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .form-panel h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .preview-panel {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        #certificate-preview {
+            width: 297mm;
+            height: 210mm;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Modern Tasarım */
+        .certificate-modern {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: white;
+        }
+
+        .certificate-modern .border-decoration {
+            border: 5px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            padding: 40px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .certificate-modern .header {
+            text-align: center;
+        }
+
+        .certificate-modern .logo {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .certificate-modern .title {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .certificate-modern .subtitle {
+            font-size: 20px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .certificate-modern .recipient {
+            font-size: 56px;
+            font-weight: bold;
+            margin: 40px 0;
+            text-align: center;
+            font-family: 'Georgia', serif;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .certificate-modern .description {
+            text-align: center;
+            font-size: 18px;
+            line-height: 1.8;
+            margin: 30px 0;
+            opacity: 0.95;
+        }
+
+        .certificate-modern .footer {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 50px;
+        }
+
+        .certificate-modern .signature-block {
+            text-align: center;
+        }
+
+        .certificate-modern .signature-line {
+            border-top: 2px solid white;
+            margin-top: 50px;
+            padding-top: 10px;
+            min-width: 200px;
+        }
+
+        /* Klasik Tasarım */
+        .certificate-classic {
+            background: #fff;
+            padding: 50px;
+            border: 20px solid;
+            border-image: linear-gradient(45deg, #d4af37, #f4e5b5, #d4af37) 1;
+        }
+
+        .certificate-classic .inner-border {
+            border: 3px double #d4af37;
+            padding: 40px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .certificate-classic .header {
+            text-align: center;
+            border-bottom: 3px double #d4af37;
+            padding-bottom: 30px;
+        }
+
+        .certificate-classic .logo {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .certificate-classic .title {
+            font-size: 48px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            font-family: 'Georgia', serif;
+        }
+
+        .certificate-classic .subtitle {
+            font-size: 18px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .certificate-classic .body {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .certificate-classic .presented-to {
+            font-size: 20px;
+            color: #666;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        .certificate-classic .recipient {
+            font-size: 56px;
+            font-weight: bold;
+            color: #d4af37;
+            margin: 20px 0;
+            font-family: 'Georgia', serif;
+        }
+
+        .certificate-classic .description {
+            font-size: 18px;
+            color: #555;
+            line-height: 1.8;
+            margin: 30px auto;
+            max-width: 800px;
+        }
+
+        .certificate-classic .footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+        }
+
+        .certificate-classic .signature-block {
+            text-align: center;
+            flex: 1;
+        }
+
+        .certificate-classic .signature-line {
+            border-top: 2px solid #333;
+            margin-top: 50px;
+            padding-top: 10px;
+            color: #333;
+        }
+
+        .certificate-classic .date-block {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 16px;
+        }
+
+        /* Minimalist Tasarım */
+        .certificate-minimal {
+            background: #f5f5f5;
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .certificate-minimal .content {
+            background: white;
+            padding: 60px;
+            border-left: 8px solid #667eea;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .certificate-minimal .title {
+            font-size: 36px;
+            font-weight: 300;
+            color: #667eea;
+            margin-bottom: 40px;
+            letter-spacing: 2px;
+        }
+
+        .certificate-minimal .recipient {
+            font-size: 48px;
+            font-weight: bold;
+            color: #333;
+            margin: 30px 0;
+        }
+
+        .certificate-minimal .description {
+            font-size: 18px;
+            color: #666;
+            line-height: 1.8;
+            margin: 30px 0;
+        }
+
+        .certificate-minimal .footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .certificate-minimal .signature-block {
+            flex: 1;
+            text-align: center;
+        }
+
+        .certificate-minimal .signature-line {
+            color: #333;
+            font-weight: 600;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .form-panel, .back-button {
+                display: none;
+            }
+            .preview-panel {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-button">← Ana Sayfaya Dön</a>
+
+    <div class="container">
+        <div class="form-panel">
+            <h1>🏆 Sertifika Oluşturucu</h1>
+
+            <div class="form-group">
+                <label>Tasarım Seçin</label>
+                <select id="design-select">
+                    <option value="modern">Modern - Gradient</option>
+                    <option value="classic">Klasik - Altın Çerçeve</option>
+                    <option value="minimal">Minimalist</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Sertifika Türü</label>
+                <select id="certificate-type">
+                    <option value="BAŞARI SERTİFİKASI">Başarı Sertifikası</option>
+                    <option value="KATILIM SERTİFİKASI">Katılım Sertifikası</option>
+                    <option value="TAKDİR SERTİFİKASI">Takdir Sertifikası</option>
+                    <option value="EĞİTİM SERTİFİKASI">Eğitim Sertifikası</option>
+                    <option value="TEŞEKKÜr SERTİFİKASI">Teşekkür Sertifikası</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Kurum/Şirket Adı</label>
+                <input type="text" id="organization" value="42 DİL TERCÜME BÜROSU">
+            </div>
+
+            <div class="form-group">
+                <label>Logo/İkon (Emoji)</label>
+                <input type="text" id="logo" value="🏆" placeholder="🏆">
+            </div>
+
+            <div class="form-group">
+                <label>Alıcı Adı</label>
+                <input type="text" id="recipient" placeholder="Ad Soyad">
+            </div>
+
+            <div class="form-group">
+                <label>Açıklama Metni</label>
+                <textarea id="description" placeholder="Bu sertifika, [kursun adı] eğitimini başarıyla tamamladığı için verilmiştir."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Tarih</label>
+                <input type="date" id="date">
+            </div>
+
+            <div class="form-group">
+                <label>Yetkili Kişi 1 - İsim</label>
+                <input type="text" id="auth1-name" placeholder="Yetkili Adı">
+            </div>
+
+            <div class="form-group">
+                <label>Yetkili Kişi 1 - Ünvan</label>
+                <input type="text" id="auth1-title" placeholder="Genel Müdür">
+            </div>
+
+            <div class="form-group">
+                <label>Yetkili Kişi 2 - İsim</label>
+                <input type="text" id="auth2-name" placeholder="Yetkili Adı">
+            </div>
+
+            <div class="form-group">
+                <label>Yetkili Kişi 2 - Ünvan</label>
+                <input type="text" id="auth2-title" placeholder="Eğitim Koordinatörü">
+            </div>
+
+            <div class="button-group">
+                <button class="btn-primary" id="update-btn">🔄 Önizlemeyi Güncelle</button>
+                <button class="btn-danger" id="download-pdf">📄 PDF İndir</button>
+                <button class="btn-success" id="download-image">🖼️ Resim İndir</button>
+            </div>
+        </div>
+
+        <div class="preview-panel">
+            <div id="certificate-preview">
+                <!-- İçerik JavaScript ile oluşturulacak -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Bugünün tarihini varsayılan olarak ayarla
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date').value = today;
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('tr-TR', options);
+        }
+
+        function generateModernCertificate() {
+            const logo = document.getElementById('logo').value || '🏆';
+            const certType = document.getElementById('certificate-type').value;
+            const organization = document.getElementById('organization').value;
+            const recipient = document.getElementById('recipient').value;
+            const description = document.getElementById('description').value;
+            const date = formatDate(document.getElementById('date').value);
+            const auth1Name = document.getElementById('auth1-name').value;
+            const auth1Title = document.getElementById('auth1-title').value;
+            const auth2Name = document.getElementById('auth2-name').value;
+            const auth2Title = document.getElementById('auth2-title').value;
+
+            return `
+                <div class="certificate-modern">
+                    <div class="border-decoration">
+                        <div class="header">
+                            <div class="logo">${logo}</div>
+                            <div class="title">${certType}</div>
+                            <div class="subtitle">${organization}</div>
+                        </div>
+
+                        <div>
+                            <div class="recipient">${recipient}</div>
+                            <div class="description">${description}</div>
+                        </div>
+
+                        <div class="footer">
+                            <div class="signature-block">
+                                <div class="signature-line">
+                                    <strong>${auth1Name}</strong><br>
+                                    <small>${auth1Title}</small>
+                                </div>
+                            </div>
+                            <div class="signature-block">
+                                <div style="padding-top: 30px; font-size: 18px;">${date}</div>
+                            </div>
+                            <div class="signature-block">
+                                <div class="signature-line">
+                                    <strong>${auth2Name}</strong><br>
+                                    <small>${auth2Title}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateClassicCertificate() {
+            const logo = document.getElementById('logo').value || '🏆';
+            const certType = document.getElementById('certificate-type').value;
+            const organization = document.getElementById('organization').value;
+            const recipient = document.getElementById('recipient').value;
+            const description = document.getElementById('description').value;
+            const date = formatDate(document.getElementById('date').value);
+            const auth1Name = document.getElementById('auth1-name').value;
+            const auth1Title = document.getElementById('auth1-title').value;
+            const auth2Name = document.getElementById('auth2-name').value;
+            const auth2Title = document.getElementById('auth2-title').value;
+
+            return `
+                <div class="certificate-classic">
+                    <div class="inner-border">
+                        <div class="header">
+                            <div class="logo">${logo}</div>
+                            <div class="title">${certType}</div>
+                            <div class="subtitle">${organization}</div>
+                        </div>
+
+                        <div class="body">
+                            <div class="presented-to">Bu sertifika verilmiştir:</div>
+                            <div class="recipient">${recipient}</div>
+                            <div class="description">${description}</div>
+                        </div>
+
+                        <div>
+                            <div class="date-block">${date}</div>
+                            <div class="footer">
+                                <div class="signature-block">
+                                    <div class="signature-line">
+                                        <strong>${auth1Name}</strong><br>
+                                        <small>${auth1Title}</small>
+                                    </div>
+                                </div>
+                                <div class="signature-block">
+                                    <div class="signature-line">
+                                        <strong>${auth2Name}</strong><br>
+                                        <small>${auth2Title}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateMinimalCertificate() {
+            const logo = document.getElementById('logo').value || '🏆';
+            const certType = document.getElementById('certificate-type').value;
+            const organization = document.getElementById('organization').value;
+            const recipient = document.getElementById('recipient').value;
+            const description = document.getElementById('description').value;
+            const date = formatDate(document.getElementById('date').value);
+            const auth1Name = document.getElementById('auth1-name').value;
+            const auth1Title = document.getElementById('auth1-title').value;
+            const auth2Name = document.getElementById('auth2-name').value;
+            const auth2Title = document.getElementById('auth2-title').value;
+
+            return `
+                <div class="certificate-minimal">
+                    <div class="content">
+                        <div style="font-size: 48px; margin-bottom: 20px;">${logo}</div>
+                        <div class="title">${certType}</div>
+                        <div style="font-size: 20px; color: #999; margin-bottom: 30px;">${organization}</div>
+                        <div class="recipient">${recipient}</div>
+                        <div class="description">${description}</div>
+                        <div style="margin: 30px 0; color: #999;">${date}</div>
+
+                        <div class="footer">
+                            <div class="signature-block">
+                                <div class="signature-line">
+                                    ${auth1Name}<br>
+                                    <small style="color: #999;">${auth1Title}</small>
+                                </div>
+                            </div>
+                            <div class="signature-block">
+                                <div class="signature-line">
+                                    ${auth2Name}<br>
+                                    <small style="color: #999;">${auth2Title}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updatePreview() {
+            const design = document.getElementById('design-select').value;
+            const preview = document.getElementById('certificate-preview');
+
+            switch(design) {
+                case 'modern':
+                    preview.innerHTML = generateModernCertificate();
+                    break;
+                case 'classic':
+                    preview.innerHTML = generateClassicCertificate();
+                    break;
+                case 'minimal':
+                    preview.innerHTML = generateMinimalCertificate();
+                    break;
+            }
+        }
+
+        // Gerçek zamanlı güncelleme
+        document.querySelectorAll('input, textarea, select').forEach(element => {
+            element.addEventListener('input', updatePreview);
+            element.addEventListener('change', updatePreview);
+        });
+
+        document.getElementById('update-btn').addEventListener('click', updatePreview);
+
+        // PDF İndirme
+        document.getElementById('download-pdf').addEventListener('click', function() {
+            const element = document.getElementById('certificate-preview');
+            const opt = {
+                margin: 0,
+                filename: 'sertifika.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+            html2pdf().from(element).set(opt).save();
+        });
+
+        // Resim İndirme
+        document.getElementById('download-image').addEventListener('click', async function() {
+            const element = document.getElementById('certificate-preview');
+            const canvas = await html2canvas(element, {
+                scale: 3,
+                useCORS: true,
+                backgroundColor: '#ffffff'
+            });
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'sertifika.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 'image/png');
+        });
+
+        // Sayfa yüklendiğinde önizlemeyi oluştur
+        updatePreview();
+    </script>
+</body>
+</html>

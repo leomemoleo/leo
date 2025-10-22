@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yeminli Tercüme Şablonu Oluşturucu</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 20px;
+        }
+
+        .back-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            transition: background 0.3s;
+        }
+
+        .back-button:hover {
+            background: #5568d3;
+        }
+
+        .form-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .form-panel h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .preview-panel {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        #document-preview {
+            width: 210mm;
+            min-height: 297mm;
+            background: white;
+            padding: 30mm;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .document-header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 3px double #333;
+            padding-bottom: 20px;
+        }
+
+        .document-header h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .document-header .company-name {
+            font-size: 28px;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .document-header .company-info {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .document-body {
+            margin: 30px 0;
+        }
+
+        .info-section {
+            margin-bottom: 25px;
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        .info-label {
+            font-weight: bold;
+            width: 200px;
+            color: #555;
+        }
+
+        .info-value {
+            flex: 1;
+            color: #333;
+        }
+
+        .translation-content {
+            background: #f9f9f9;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+            margin: 20px 0;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+
+        .translation-content h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .document-footer {
+            margin-top: 50px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .signature-block {
+            text-align: center;
+        }
+
+        .signature-line {
+            border-top: 2px solid #333;
+            margin-top: 60px;
+            padding-top: 10px;
+            font-weight: bold;
+        }
+
+        .stamp-area {
+            text-align: center;
+            border: 2px dashed #999;
+            padding: 40px 20px;
+            margin-top: 20px;
+            color: #999;
+            font-style: italic;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .form-panel, .back-button {
+                display: none;
+            }
+            .preview-panel {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-button">← Ana Sayfaya Dön</a>
+
+    <div class="container">
+        <div class="form-panel">
+            <h1>📋 Tercüme Belgesi</h1>
+
+            <div class="form-group">
+                <label>Tercüman/Şirket Adı</label>
+                <input type="text" id="company-name" value="42 DİL TERCÜME BÜROSU">
+            </div>
+
+            <div class="form-group">
+                <label>İletişim Bilgileri</label>
+                <textarea id="company-info" rows="3">Adres: [Adres bilgisi]
+Telefon: [Telefon numarası]
+E-posta: info@42dil.com</textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Belge Türü</label>
+                <select id="document-type">
+                    <option value="Kimlik Kartı">Kimlik Kartı</option>
+                    <option value="Pasaport">Pasaport</option>
+                    <option value="Diploma">Diploma</option>
+                    <option value="Evlilik Cüzdanı">Evlilik Cüzdanı</option>
+                    <option value="Doğum Belgesi">Doğum Belgesi</option>
+                    <option value="Sürücü Belgesi">Sürücü Belgesi</option>
+                    <option value="Diğer">Diğer</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Kaynak Dil</label>
+                <input type="text" id="source-lang" value="Özbekçe">
+            </div>
+
+            <div class="form-group">
+                <label>Hedef Dil</label>
+                <input type="text" id="target-lang" value="Türkçe">
+            </div>
+
+            <div class="form-group">
+                <label>Belge Sahibi</label>
+                <input type="text" id="document-owner" value="">
+            </div>
+
+            <div class="form-group">
+                <label>Belge Numarası (Orijinal)</label>
+                <input type="text" id="document-number" value="">
+            </div>
+
+            <div class="form-group">
+                <label>Düzenleme Tarihi</label>
+                <input type="date" id="issue-date">
+            </div>
+
+            <div class="form-group">
+                <label>Tercüme Tarihi</label>
+                <input type="date" id="translation-date">
+            </div>
+
+            <div class="form-group">
+                <label>Tercüme Metni</label>
+                <textarea id="translation-text" rows="8" placeholder="Buraya tercüme metnini yazın..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Tercüman Adı</label>
+                <input type="text" id="translator-name" value="">
+            </div>
+
+            <div class="form-group">
+                <label>Sicil No / Yetki Belgesi</label>
+                <input type="text" id="license-number" value="">
+            </div>
+
+            <div class="button-group">
+                <button class="btn-primary" id="update-btn">🔄 Önizlemeyi Güncelle</button>
+                <button class="btn-danger" id="download-pdf">📄 PDF İndir</button>
+                <button class="btn-success" id="download-image">🖼️ Resim İndir</button>
+            </div>
+        </div>
+
+        <div class="preview-panel">
+            <div id="document-preview">
+                <div class="document-header">
+                    <div class="company-name" id="preview-company-name">42 DİL TERCÜME BÜROSU</div>
+                    <div class="company-info" id="preview-company-info">
+                        Adres: [Adres bilgisi]<br>
+                        Telefon: [Telefon numarası]<br>
+                        E-posta: info@42dil.com
+                    </div>
+                </div>
+
+                <h1 style="text-align: center; margin-bottom: 30px;">YEMİNLİ TERCÜMELİ BELGE</h1>
+
+                <div class="document-body">
+                    <div class="info-section">
+                        <div class="info-row">
+                            <span class="info-label">Belge Türü:</span>
+                            <span class="info-value" id="preview-doc-type">Kimlik Kartı</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Kaynak Dil:</span>
+                            <span class="info-value" id="preview-source-lang">Özbekçe</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Hedef Dil:</span>
+                            <span class="info-value" id="preview-target-lang">Türkçe</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Belge Sahibi:</span>
+                            <span class="info-value" id="preview-owner"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Belge Numarası:</span>
+                            <span class="info-value" id="preview-doc-number"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Düzenleme Tarihi:</span>
+                            <span class="info-value" id="preview-issue-date"></span>
+                        </div>
+                    </div>
+
+                    <div class="translation-content">
+                        <h3>Tercüme:</h3>
+                        <div id="preview-translation"></div>
+                    </div>
+
+                    <div class="info-section">
+                        <div class="info-row">
+                            <span class="info-label">Tercüme Tarihi:</span>
+                            <span class="info-value" id="preview-trans-date"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="document-footer">
+                    <div class="signature-block">
+                        <div class="signature-line">
+                            <div id="preview-translator-name"></div>
+                            <div style="font-size: 12px; color: #666;">Yeminli Tercüman</div>
+                            <div style="font-size: 12px; color: #666;" id="preview-license"></div>
+                        </div>
+                    </div>
+                    <div class="stamp-area">
+                        [KAŞE VE İMZA ALANI]
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Bugünün tarihini varsayılan olarak ayarla
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('translation-date').value = today;
+
+        function updatePreview() {
+            document.getElementById('preview-company-name').textContent = document.getElementById('company-name').value;
+            document.getElementById('preview-company-info').innerHTML = document.getElementById('company-info').value.replace(/\n/g, '<br>');
+            document.getElementById('preview-doc-type').textContent = document.getElementById('document-type').value;
+            document.getElementById('preview-source-lang').textContent = document.getElementById('source-lang').value;
+            document.getElementById('preview-target-lang').textContent = document.getElementById('target-lang').value;
+            document.getElementById('preview-owner').textContent = document.getElementById('document-owner').value;
+            document.getElementById('preview-doc-number').textContent = document.getElementById('document-number').value;
+            document.getElementById('preview-issue-date').textContent = document.getElementById('issue-date').value;
+            document.getElementById('preview-translation').textContent = document.getElementById('translation-text').value;
+            document.getElementById('preview-trans-date').textContent = document.getElementById('translation-date').value;
+            document.getElementById('preview-translator-name').textContent = document.getElementById('translator-name').value;
+            document.getElementById('preview-license').textContent = 'Sicil No: ' + document.getElementById('license-number').value;
+        }
+
+        // Gerçek zamanlı güncelleme
+        document.querySelectorAll('input, textarea, select').forEach(element => {
+            element.addEventListener('input', updatePreview);
+        });
+
+        document.getElementById('update-btn').addEventListener('click', updatePreview);
+
+        // PDF İndirme
+        document.getElementById('download-pdf').addEventListener('click', function() {
+            const element = document.getElementById('document-preview');
+            const opt = {
+                margin: 10,
+                filename: 'tercume_belgesi.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().from(element).set(opt).save();
+        });
+
+        // Resim İndirme
+        document.getElementById('download-image').addEventListener('click', async function() {
+            const element = document.getElementById('document-preview');
+            const canvas = await html2canvas(element, {
+                scale: 3,
+                useCORS: true,
+                backgroundColor: '#ffffff'
+            });
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'tercume_belgesi.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 'image/png');
+        });
+
+        // Sayfa yüklendiğinde önizlemeyi oluştur
+        updatePreview();
+    </script>
+</body>
+</html>
