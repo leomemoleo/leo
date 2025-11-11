@@ -401,3 +401,116 @@ function truncate($text, $length = 100, $suffix = '...') {
     }
     return substr($text, 0, $length) . $suffix;
 }
+
+// ===================================
+// SETTINGS HELPER FUNCTIONS
+// ===================================
+
+/**
+ * Get a setting value
+ *
+ * @param string $key Setting key
+ * @param mixed $default Default value if not found
+ * @return mixed Setting value
+ */
+function getSetting($key, $default = null) {
+    static $settingsModel = null;
+
+    if ($settingsModel === null) {
+        require_once __DIR__ . '/../../models/Settings.php';
+        $settingsModel = new Settings();
+    }
+
+    return $settingsModel->get($key, $default);
+}
+
+/**
+ * Get a boolean setting value
+ *
+ * @param string $key Setting key
+ * @param bool $default Default value
+ * @return bool
+ */
+function getSettingBool($key, $default = false) {
+    static $settingsModel = null;
+
+    if ($settingsModel === null) {
+        require_once __DIR__ . '/../../models/Settings.php';
+        $settingsModel = new Settings();
+    }
+
+    return $settingsModel->getBool($key, $default);
+}
+
+/**
+ * Get an integer setting value
+ *
+ * @param string $key Setting key
+ * @param int $default Default value
+ * @return int
+ */
+function getSettingInt($key, $default = 0) {
+    static $settingsModel = null;
+
+    if ($settingsModel === null) {
+        require_once __DIR__ . '/../../models/Settings.php';
+        $settingsModel = new Settings();
+    }
+
+    return $settingsModel->getInt($key, $default);
+}
+
+/**
+ * Update a setting value
+ *
+ * @param string $key Setting key
+ * @param mixed $value Setting value
+ * @return bool Success status
+ */
+function updateSetting($key, $value) {
+    static $settingsModel = null;
+
+    if ($settingsModel === null) {
+        require_once __DIR__ . '/../../models/Settings.php';
+        $settingsModel = new Settings();
+    }
+
+    return $settingsModel->set($key, $value);
+}
+
+/**
+ * Check if site is in maintenance mode
+ *
+ * @return bool
+ */
+function isMaintenanceMode() {
+    return getSettingBool('maintenance_mode', false);
+}
+
+/**
+ * Get site currency symbol
+ *
+ * @return string
+ */
+function getCurrencySymbol() {
+    return getSetting('currency_symbol', '₺');
+}
+
+/**
+ * Get site currency code
+ *
+ * @return string
+ */
+function getCurrency() {
+    return getSetting('currency', 'TRY');
+}
+
+/**
+ * Check if feature is enabled
+ *
+ * @param string $feature Feature name (reviews, wishlist, loyalty, etc.)
+ * @return bool
+ */
+function isFeatureEnabled($feature) {
+    return getSettingBool('enable_' . $feature, true);
+}
