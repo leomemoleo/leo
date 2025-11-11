@@ -22,7 +22,8 @@ class AdminDashboardController {
             'stats' => $this->getStats(),
             'recent_orders' => $this->getRecentOrders(),
             'low_stock_products' => $this->getLowStockProducts(),
-            'recent_reviews' => $this->getRecentReviews()
+            'recent_reviews' => $this->getRecentReviews(),
+            'monthly_sales' => $this->getMonthlySales()
         ];
 
         $this->render('pages/dashboard', $data);
@@ -120,6 +121,24 @@ class AdminDashboardController {
                 INNER JOIN users u ON r.user_id = u.id
                 ORDER BY r.created_at DESC
                 LIMIT 5";
+        $stmt = $this->db->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Get monthly sales data for chart (last 12 months)
+     */
+    private function getMonthlySales() {
+        $sql = "SELECT
+                    DATE_FORMAT(created_at, '%Y-%m') as month,
+                    DATE_FORMAT(created_at, '%M %Y') as month_name,
+                    COUNT(*) as order_count,
+                    COALESCE(SUM(total_amount), 0) as revenue
+                FROM orders
+                WHERE created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)
+                AND status != 'cancelled'
+                GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+                ORDER BY month ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

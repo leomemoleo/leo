@@ -63,6 +63,16 @@
     </div>
 </div>
 
+<!-- Sales Chart -->
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+        <h3 class="card-title">Aylık Satış Grafiği (Son 12 Ay)</h3>
+    </div>
+    <div class="card-body">
+        <canvas id="salesChart" style="max-height: 350px;"></canvas>
+    </div>
+</div>
+
 <!-- Recent Orders & Low Stock -->
 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-bottom: 2rem;">
     <!-- Recent Orders -->
@@ -205,3 +215,147 @@
         <?php endif; ?>
     </div>
 </div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Prepare sales data
+const salesData = <?= json_encode($monthly_sales ?? []) ?>;
+const months = salesData.map(item => item.month_name || item.month);
+const revenues = salesData.map(item => parseFloat(item.revenue));
+const orderCounts = salesData.map(item => parseInt(item.order_count));
+
+// Sales Chart
+const ctx = document.getElementById('salesChart');
+if (ctx) {
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: months,
+            datasets: [
+                {
+                    label: 'Gelir (₺)',
+                    data: revenues,
+                    borderColor: '#8B9A66',
+                    backgroundColor: 'rgba(139, 154, 102, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Sipariş Sayısı',
+                    data: orderCounts,
+                    borderColor: '#D4AF37',
+                    backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        font: {
+                            size: 13,
+                            weight: '600'
+                        },
+                        padding: 15,
+                        usePointStyle: true
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: {
+                        size: 14
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                if (context.datasetIndex === 0) {
+                                    label += new Intl.NumberFormat('tr-TR', {
+                                        style: 'currency',
+                                        currency: 'TRY'
+                                    }).format(context.parsed.y);
+                                } else {
+                                    label += context.parsed.y + ' adet';
+                                }
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return new Intl.NumberFormat('tr-TR', {
+                                style: 'currency',
+                                currency: 'TRY',
+                                maximumFractionDigits: 0
+                            }).format(value);
+                        },
+                        font: {
+                            size: 11
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value + ' adet';
+                        },
+                        font: {
+                            size: 11
+                        }
+                    },
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                },
+                x: {
+                    ticks: {
+                        font: {
+                            size: 11
+                        }
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+}
+</script>
