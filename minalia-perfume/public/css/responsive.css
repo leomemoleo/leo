@@ -250,3 +250,311 @@
         max-width: 100%;
     }
 }
+
+/* ===================================
+   ENHANCED RESPONSIVE - v3.0
+   =================================== */
+
+/* iPad Pro (1024px) */
+@media (max-width: 1024px) and (min-width: 769px) {
+    .container {
+        max-width: 960px;
+    }
+
+    .products-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .category-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Enhanced Tablet (768px) */
+@media (max-width: 768px) {
+    /* Improved Header Spacing */
+    .header-main {
+        padding: 1rem 0;
+    }
+
+    .logo {
+        font-size: 1.5rem;
+    }
+
+    /* Better Navigation */
+    .header-nav.active {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(10px);
+        z-index: 9999;
+        padding: 2rem;
+        overflow-y: auto;
+    }
+
+    .header-nav.active .nav-links {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        margin-top: 3rem;
+    }
+
+    .header-nav.active .nav-links a {
+        font-size: 1.25rem;
+        padding: 1rem;
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    /* Mobile Menu Close Button */
+    .header-nav.active::before {
+        content: '✕';
+        position: absolute;
+        top: 1.5rem;
+        right: 1.5rem;
+        font-size: 2rem;
+        cursor: pointer;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--color-cream);
+        border-radius: 50%;
+    }
+
+    /* Better Card Spacing */
+    .card {
+        margin-bottom: 1rem;
+    }
+
+    /* Touch-Friendly Buttons */
+    .btn {
+        min-height: 48px;
+        padding: 0.875rem 1.5rem;
+    }
+
+    /* Improved Product Cards */
+    .product-card {
+        padding: 1rem;
+    }
+
+    .product-image {
+        height: 200px;
+    }
+
+    /* Better Modal */
+    .modal-content {
+        margin: 1rem;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    /* Stack Forms */
+    .form-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Account Dashboard */
+    .account-container .container > div {
+        grid-template-columns: 1fr !important;
+    }
+
+    .account-sidebar {
+        margin-bottom: 2rem;
+    }
+}
+
+/* Enhanced Mobile (480px) */
+@media (max-width: 480px) {
+    /* Compact Typography */
+    .container {
+        padding: 0 1rem;
+    }
+
+    /* Better Touch Targets */
+    button,
+    a.btn,
+    .action-btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    /* Simplified Header */
+    .header-actions {
+        gap: 0.5rem;
+    }
+
+    .header-action {
+        padding: 0.5rem;
+    }
+
+    /* Full Width Search */
+    .search-bar {
+        width: 100%;
+    }
+
+    /* Single Column Everything */
+    .features-grid,
+    .footer-grid,
+    .products-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem;
+    }
+
+    /* Compact Product Card */
+    .product-card {
+        display: flex;
+        flex-direction: row;
+        gap: 1rem;
+    }
+
+    .product-image {
+        width: 100px;
+        height: 100px;
+        flex-shrink: 0;
+    }
+
+    .product-info {
+        flex: 1;
+    }
+
+    /* Simplified Footer */
+    .footer {
+        text-align: center;
+    }
+
+    .footer-links {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    /* Better Newsletter */
+    .newsletter-form input {
+        width: 100% !important;
+        margin-bottom: 0.5rem;
+    }
+
+    .newsletter-form button {
+        width: 100%;
+    }
+
+    /* Optimized Spacing */
+    section {
+        padding: 2rem 0 !important;
+    }
+
+    /* Compact Tables */
+    table {
+        font-size: 0.875rem;
+    }
+
+    td,
+    th {
+        padding: 0.5rem !important;
+    }
+
+    /* Stack Stats Cards */
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Landscape Mobile */
+@media (max-width: 896px) and (orientation: landscape) {
+    .hero-slider {
+        height: 400px;
+    }
+
+    .modal-content {
+        max-height: 80vh;
+    }
+
+    .header-nav.active {
+        overflow-y: scroll;
+    }
+}
+
+/* Small Mobile (360px) */
+@media (max-width: 360px) {
+    html {
+        font-size: 14px;
+    }
+
+    .btn {
+        font-size: 0.875rem;
+        padding: 0.75rem 1rem;
+    }
+
+    .hero-slider {
+        height: 250px;
+    }
+
+    .slide-title {
+        font-size: 1.25rem;
+    }
+
+    .slide-desc {
+        display: none;
+    }
+}
+
+/* High DPI Screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    /* Optimize images for retina */
+    img {
+        image-rendering: -webkit-optimize-contrast;
+    }
+}
+
+/* Accessibility - High Contrast */
+@media (prefers-contrast: high) {
+    :root {
+        --color-primary: #5a6b3c;
+        --color-gold: #b49027;
+    }
+
+    .btn {
+        border: 2px solid currentColor;
+    }
+
+    a:focus,
+    button:focus {
+        outline: 3px solid var(--color-primary);
+        outline-offset: 3px;
+    }
+}
+
+/* Hover Support Check */
+@media (hover: hover) {
+    .product-card:hover {
+        transform: translateY(-8px);
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+}
+
+/* No Hover Support (Touch Devices) */
+@media (hover: none) {
+    .product-card:active {
+        transform: scale(0.98);
+    }
+
+    .btn:active {
+        transform: scale(0.95);
+    }
+
+    /* Always show mobile-friendly elements */
+    .product-actions {
+        opacity: 1 !important;
+    }
+
+    .quickview-btn {
+        display: none;
+    }
+}
