@@ -18,9 +18,26 @@ class AdminNewsletterController {
      * Newsletter dashboard
      */
     public function index() {
-        $sql = "SELECT COUNT(*) as total FROM newsletter_subscribers WHERE is_active = 1";
-        $stmt = $this->db->query($sql);
-        $stats = $stmt->fetch(PDO::FETCH_ASSOC);
+        // Get statistics
+        $totalSql = "SELECT COUNT(*) as total FROM newsletter_subscribers";
+        $totalStmt = $this->db->query($totalSql);
+        $totalResult = $totalStmt->fetch(PDO::FETCH_ASSOC);
+
+        $activeSql = "SELECT COUNT(*) as total FROM newsletter_subscribers WHERE is_active = 1";
+        $activeStmt = $this->db->query($activeSql);
+        $activeResult = $activeStmt->fetch(PDO::FETCH_ASSOC);
+
+        $thisMonthSql = "SELECT COUNT(*) as total FROM newsletter_subscribers
+                         WHERE MONTH(subscribed_at) = MONTH(CURRENT_DATE())
+                         AND YEAR(subscribed_at) = YEAR(CURRENT_DATE())";
+        $thisMonthStmt = $this->db->query($thisMonthSql);
+        $thisMonthResult = $thisMonthStmt->fetch(PDO::FETCH_ASSOC);
+
+        $stats = [
+            'total_subscribers' => $totalResult['total'],
+            'active_subscribers' => $activeResult['total'],
+            'this_month_subscribers' => $thisMonthResult['total']
+        ];
 
         $subscribersSql = "SELECT * FROM newsletter_subscribers ORDER BY subscribed_at DESC LIMIT 50";
         $subscribersStmt = $this->db->query($subscribersSql);
@@ -53,7 +70,7 @@ class AdminNewsletterController {
         $data = [
             'title' => 'Newsletter Gönder',
             'active_menu' => 'newsletter',
-            'subscriber_count' => $stats['total']
+            'active_subscribers' => $stats['total']
         ];
 
         $this->render('pages/newsletter/send', $data);
@@ -66,9 +83,27 @@ class AdminNewsletterController {
         try {
             $subject = sanitize($_POST['subject'] ?? '');
             $message = $_POST['message'] ?? '';
+            $isTest = isset($_POST['send_test']);
 
             if (empty($subject) || empty($message)) {
                 throw new Exception('Konu ve mesaj alanları zorunludur.');
+            }
+
+            $emailService = new EmailService();
+            $sent = 0;
+
+            if ($isTest) {
+                // Send test email to admin only
+                $adminEmail = $_SESSION[SESSION_ADMIN_EMAIL] ?? 'admin@minalia.com.tr';
+                $result = $emailService->send($adminEmail, '[TEST] ' . $subject, $message);
+
+                if ($result) {
+                    setFlashMessage("Test emaili gönderildi: $adminEmail", 'success');
+                } else {
+                    setFlashMessage('Test emaili gönderilemedi.', 'error');
+                }
+                redirect(ADMIN_URL . '/newsletter/send');
+                return;
             }
 
             // Get active subscribers
@@ -76,24 +111,126 @@ class AdminNewsletterController {
             $stmt = $this->db->query($sql);
             $subscribers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            $emailService = new EmailService();
-            $sent = 0;
-
             foreach ($subscribers as $subscriber) {
-                $result = $emailService->sendNewsletter($subscriber['email'], $subject, $message);
+                $result = $emailService->send($subscriber['email'], $subject, $message);
                 if ($result) {
                     $sent++;
                 }
+
+                // Small delay to avoid spam filters
+                usleep(100000); // 0.1 second
             }
 
             $this->logActivity('newsletter_sent', "Sent newsletter to $sent subscribers: $subject");
 
-            setFlashMessage("Newsletter başarıyla gönderildi! ($sent kişi)", 'success');
+            setFlashMessage("Newsletter başarıyla gönderildi! ($sent / " . count($subscribers) . " kişi)", 'success');
             redirect(ADMIN_URL . '/newsletter');
 
         } catch (Exception $e) {
             setFlashMessage('Hata: ' . $e->getMessage(), 'error');
             redirect(ADMIN_URL . '/newsletter/send');
+        }
+    }
+
+    /**
+     * Toggle subscriber status
+     */
+    public function toggleStatus() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request']);
+            return;
+        }
+
+        $id = (int)($_POST['id'] ?? 0);
+
+        try {
+            // Get current status
+            $sql = "SELECT is_active FROM newsletter_subscribers WHERE id = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$id]);
+            $subscriber = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$subscriber) {
+                throw new Exception('Abone bulunamadı');
+            }
+
+            $newStatus = $subscriber['is_active'] ? 0 : 1;
+
+            // Update status
+            $updateSql = "UPDATE newsletter_subscribers SET is_active = ? WHERE id = ?";
+            $updateStmt = $this->db->prepare($updateSql);
+            $updateStmt->execute([$newStatus, $id]);
+
+            echo json_encode(['success' => true, 'message' => 'Durum güncellendi']);
+
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Delete subscriber
+     */
+    public function delete() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request']);
+            return;
+        }
+
+        $id = (int)($_POST['id'] ?? 0);
+
+        try {
+            $sql = "DELETE FROM newsletter_subscribers WHERE id = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$id]);
+
+            $this->logActivity('subscriber_deleted', "Deleted subscriber ID: $id");
+
+            echo json_encode(['success' => true, 'message' => 'Abone silindi']);
+
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Export subscribers to CSV
+     */
+    public function export() {
+        try {
+            $sql = "SELECT email, name, is_active, subscribed_at FROM newsletter_subscribers ORDER BY subscribed_at DESC";
+            $stmt = $this->db->query($sql);
+            $subscribers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Set headers for CSV download
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename=newsletter_subscribers_' . date('Y-m-d') . '.csv');
+
+            // Create output stream
+            $output = fopen('php://output', 'w');
+
+            // Add BOM for UTF-8
+            fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+
+            // Add CSV headers
+            fputcsv($output, ['Email', 'İsim', 'Durum', 'Kayıt Tarihi']);
+
+            // Add data
+            foreach ($subscribers as $subscriber) {
+                fputcsv($output, [
+                    $subscriber['email'],
+                    $subscriber['name'] ?? '',
+                    $subscriber['is_active'] ? 'Aktif' : 'Pasif',
+                    date('d.m.Y H:i', strtotime($subscriber['subscribed_at']))
+                ]);
+            }
+
+            fclose($output);
+            exit;
+
+        } catch (Exception $e) {
+            setFlashMessage('Hata: ' . $e->getMessage(), 'error');
+            redirect(ADMIN_URL . '/newsletter');
         }
     }
 

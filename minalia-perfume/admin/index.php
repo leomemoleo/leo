@@ -82,6 +82,9 @@ $routes = [
     // Newsletter
     'newsletter' => 'AdminNewsletterController@index',
     'newsletter/send' => 'AdminNewsletterController@send',
+    'newsletter/toggle-status' => 'AdminNewsletterController@toggleStatus',
+    'newsletter/delete' => 'AdminNewsletterController@delete',
+    'newsletter/export' => 'AdminNewsletterController@export',
 
     // Pages
     'pages' => 'AdminPageController@index',
