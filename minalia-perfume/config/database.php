@@ -1,6 +1,6 @@
 <?php
 /**
- * Database Configuration and Connection Handler
+ * Database Configuration and Connection Handler  
  * MINALIA Parfüm E-Ticaret Platformu
  */
 
@@ -15,46 +15,21 @@ class Database {
     private $charset;
 
     /**
-     * Constructor - Loads environment variables
+     * Constructor - Loads configuration
      */
     private function __construct() {
-        $this->loadEnv();
-
-        $this->host = $_ENV['DB_HOST'] ?? 'localhost';
-        $this->dbname = $_ENV['DB_NAME'] ?? 'minalia_perfume';
-        $this->username = $_ENV['DB_USER'] ?? 'root';
-        $this->password = $_ENV['DB_PASS'] ?? '';
-        $this->charset = $_ENV['DB_CHARSET'] ?? 'utf8mb4';
-    }
-
-    /**
-     * Load environment variables from .env file
-     */
-    private function loadEnv() {
-        $envFile = dirname(__DIR__) . '/.env';
-
-        if (file_exists($envFile)) {
-            $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-            foreach ($lines as $line) {
-                if (strpos(trim($line), '#') === 0) {
-                    continue;
-                }
-
-                if (strpos($line, '=') !== false) {
-                    list($key, $value) = explode('=', $line, 2);
-                    $key = trim($key);
-                    $value = trim($value);
-
-                    // Remove quotes if present
-                    if (preg_match('/^(["\'])(.*)\\1$/', $value, $matches)) {
-                        $value = $matches[2];
-                    }
-
-                    $_ENV[$key] = $value;
-                    putenv("$key=$value");
-                }
-            }
+        // Load config.php if exists (installed via wizard)
+        $configFile = dirname(__DIR__) . '/config/config.php';
+        if (file_exists($configFile)) {
+            require_once $configFile;
         }
+
+        // Use constants from config.php if available, otherwise use defaults
+        $this->host = defined('DB_HOST') ? DB_HOST : 'localhost';
+        $this->dbname = defined('DB_NAME') ? DB_NAME : 'minalia_perfume';
+        $this->username = defined('DB_USER') ? DB_USER : 'root';
+        $this->password = defined('DB_PASS') ? DB_PASS : '';
+        $this->charset = 'utf8mb4';
     }
 
     /**
@@ -96,7 +71,9 @@ class Database {
      * Handle database errors
      */
     private function handleError($e) {
-        if ($_ENV['DEBUG_MODE'] ?? false) {
+        $debugMode = defined('DEBUG_MODE') ? DEBUG_MODE : false;
+
+        if ($debugMode) {
             die("Database Error: " . $e->getMessage());
         } else {
             error_log("Database Error: " . $e->getMessage());

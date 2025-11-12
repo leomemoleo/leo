@@ -14,6 +14,9 @@ require_once __DIR__ . '/../app/helpers/functions.php';
 define('ADMIN_URL', BASE_URL . '/admin');
 define('ADMIN_VIEWS_PATH', __DIR__ . '/views');
 
+// Load base controller
+require_once __DIR__ . '/controllers/AdminController.php';
+
 // Check if admin is logged in
 function requireAdminAuth() {
     if (!isset($_SESSION[SESSION_ADMIN_ID])) {

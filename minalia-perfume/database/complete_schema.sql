@@ -3,8 +3,6 @@
 -- Oluşturulma Tarihi: 2025-11-11
 
 -- Veritabanı oluştur
-CREATE DATABASE IF NOT EXISTS minalia_perfume CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE minalia_perfume;
 
 -- 1. Kullanıcılar Tablosu
 CREATE TABLE users (
@@ -344,7 +342,6 @@ INSERT INTO settings (setting_key, setting_value, setting_type, description) VAL
 -- Additional Tables for New Features
 -- MINALIA Parfüm E-Ticaret Platformu
 
-USE minalia_perfume;
 
 -- Loyalty Points Table
 CREATE TABLE IF NOT EXISTS loyalty_points (
@@ -453,7 +450,6 @@ INSERT INTO coupons (code, description, discount_type, discount_value, min_order
 -- Contact Messages Table
 -- MINALIA Parfüm E-Ticaret Platformu
 
-USE minalia_perfume;
 
 CREATE TABLE IF NOT EXISTS contact_messages (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -470,7 +466,6 @@ CREATE TABLE IF NOT EXISTS contact_messages (
 -- Pages Table for Static Content Management
 -- MINALIA Parfüm E-Ticaret Platformu
 
-USE minalia_perfume;
 
 -- Create pages table
 CREATE TABLE IF NOT EXISTS pages (

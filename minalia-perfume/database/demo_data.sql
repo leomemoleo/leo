@@ -1,7 +1,6 @@
 -- MINALIA Parfüm - Demo Verileri
 -- Test için örnek kategoriler, markalar ve ürünler
 
-USE minalia_perfume;
 
 -- Kategoriler
 INSERT INTO categories (name, slug, description, sort_order, is_active) VALUES
