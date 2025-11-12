@@ -93,6 +93,10 @@ $router->group('/account', function($router) {
     $router->post('/payment-methods/add', 'AccountController@addPaymentMethod', 'account.payment.add');
     $router->post('/payment-methods/delete/{id}', 'AccountController@deletePaymentMethod', 'account.payment.delete');
     $router->post('/payment-methods/set-default/{id}', 'AccountController@setDefaultPaymentMethod', 'account.payment.default');
+    $router->get('/returns', 'AccountController@returns', 'account.returns');
+    $router->get('/returns/{id}', 'AccountController@returnDetail', 'account.returns.detail');
+    $router->any('/returns/create/{orderId}', 'AccountController@createReturn', 'account.returns.create');
+    $router->post('/returns/cancel/{id}', 'AccountController@cancelReturn', 'account.returns.cancel');
 });
 
 // Reviews

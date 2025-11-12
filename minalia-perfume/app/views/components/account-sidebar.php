@@ -10,6 +10,11 @@
             <span>Siparişlerim</span>
         </a>
 
+        <a href="<?= BASE_URL ?>/account/returns" class="sidebar-item <?= $active_menu === 'returns' ? 'active' : '' ?>">
+            <i class="fas fa-undo-alt"></i>
+            <span>İadelerim</span>
+        </a>
+
         <a href="<?= BASE_URL ?>/account/addresses" class="sidebar-item <?= $active_menu === 'addresses' ? 'active' : '' ?>">
             <i class="fas fa-map-marker-alt"></i>
             <span>Adreslerim</span>

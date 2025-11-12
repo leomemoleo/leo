@@ -831,4 +831,232 @@ class AccountController extends BaseController {
 
         redirect('/account/payment-methods');
     }
+
+    /**
+     * Returns/Cancellations list
+     */
+    public function returns() {
+        $userId = getCurrentUserId();
+
+        $sql = "SELECT r.*, o.order_number, o.total_amount as order_total
+                FROM returns r
+                INNER JOIN orders o ON r.order_id = o.id
+                WHERE r.user_id = ?
+                ORDER BY r.created_at DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$userId]);
+        $returns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->view('account/returns', [
+            'title' => 'İadelerim',
+            'returns' => $returns
+        ]);
+    }
+
+    /**
+     * Return detail
+     */
+    public function returnDetail($id) {
+        $userId = getCurrentUserId();
+
+        $sql = "SELECT r.*, o.order_number, o.total_amount as order_total, o.created_at as order_date
+                FROM returns r
+                INNER JOIN orders o ON r.order_id = o.id
+                WHERE r.id = ? AND r.user_id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$id, $userId]);
+        $return = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$return) {
+            setFlashMessage('İade talebi bulunamadı.', 'error');
+            redirect('/account/returns');
+            return;
+        }
+
+        // Decode JSON fields
+        $return['return_items'] = json_decode($return['return_items'], true);
+        $return['proof_images'] = $return['proof_images'] ? json_decode($return['proof_images'], true) : [];
+
+        $this->view('account/return-detail', [
+            'title' => 'İade Detayı #' . $return['return_number'],
+            'return' => $return
+        ]);
+    }
+
+    /**
+     * Create return request
+     */
+    public function createReturn($orderId) {
+        $userId = getCurrentUserId();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            // Show create return form
+            $sql = "SELECT * FROM orders WHERE id = ? AND user_id = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$orderId, $userId]);
+            $order = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$order) {
+                setFlashMessage('Sipariş bulunamadı.', 'error');
+                redirect('/account/orders');
+                return;
+            }
+
+            // Get order items
+            $itemsSql = "SELECT oi.*, p.name, p.main_image
+                        FROM order_items oi
+                        INNER JOIN products p ON oi.product_id = p.id
+                        WHERE oi.order_id = ?";
+            $itemsStmt = $this->db->prepare($itemsSql);
+            $itemsStmt->execute([$orderId]);
+            $items = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $this->view('account/create-return', [
+                'title' => 'İade Talebi Oluştur',
+                'order' => $order,
+                'items' => $items
+            ]);
+            return;
+        }
+
+        // Process return request
+        // CSRF validation
+        if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
+            setFlashMessage('Güvenlik hatası. Lütfen tekrar deneyin.', 'error');
+            redirect('/account/orders');
+            return;
+        }
+
+        // Validate order belongs to user
+        $sql = "SELECT id, order_number FROM orders WHERE id = ? AND user_id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$orderId, $userId]);
+        $order = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$order) {
+            setFlashMessage('Sipariş bulunamadı.', 'error');
+            redirect('/account/orders');
+            return;
+        }
+
+        $returnType = sanitize($_POST['return_type'] ?? 'return');
+        $reason = sanitize($_POST['reason'] ?? '');
+        $reasonDetails = sanitize($_POST['reason_details'] ?? '');
+        $refundMethod = sanitize($_POST['refund_method'] ?? 'original_payment');
+        $returnItems = $_POST['return_items'] ?? [];
+
+        // Validation
+        $errors = [];
+
+        if (!in_array($returnType, ['return', 'cancel'])) {
+            $errors[] = 'Geçersiz işlem tipi.';
+        }
+
+        if (empty($reason)) {
+            $errors[] = 'İade sebebi zorunludur.';
+        }
+
+        if (empty($returnItems)) {
+            $errors[] = 'En az bir ürün seçmelisiniz.';
+        }
+
+        if (!empty($errors)) {
+            foreach ($errors as $error) {
+                setFlashMessage($error, 'error');
+            }
+            redirect('/account/orders/' . $order['order_number']);
+            return;
+        }
+
+        try {
+            // Generate return number
+            $returnNumber = 'RET-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
+
+            // Prepare return items JSON
+            $returnItemsFormatted = [];
+            foreach ($returnItems as $productId => $quantity) {
+                if ($quantity > 0) {
+                    $returnItemsFormatted[] = [
+                        'product_id' => (int)$productId,
+                        'quantity' => (int)$quantity
+                    ];
+                }
+            }
+
+            // Insert return request
+            $sql = "INSERT INTO returns (return_number, order_id, user_id, return_type, reason,
+                    reason_details, return_items, refund_method, status, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), NOW())";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                $returnNumber,
+                $orderId,
+                $userId,
+                $returnType,
+                $reason,
+                $reasonDetails,
+                json_encode($returnItemsFormatted),
+                $refundMethod
+            ]);
+
+            setFlashMessage('İade talebiniz başarıyla oluşturuldu. Talebiniz en kısa sürede değerlendirilecektir.', 'success');
+            redirect('/account/returns');
+        } catch (Exception $e) {
+            error_log("Create return error: " . $e->getMessage());
+            setFlashMessage('İade talebi oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+            redirect('/account/orders');
+        }
+    }
+
+    /**
+     * Cancel return request
+     */
+    public function cancelReturn($id) {
+        $userId = getCurrentUserId();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('/account/returns');
+            return;
+        }
+
+        // CSRF validation
+        if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
+            setFlashMessage('Güvenlik hatası. Lütfen tekrar deneyin.', 'error');
+            redirect('/account/returns');
+            return;
+        }
+
+        try {
+            // Check if return belongs to user and is pending
+            $sql = "SELECT id, status FROM returns WHERE id = ? AND user_id = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$id, $userId]);
+            $return = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$return) {
+                setFlashMessage('İade talebi bulunamadı.', 'error');
+                redirect('/account/returns');
+                return;
+            }
+
+            if ($return['status'] !== 'pending') {
+                setFlashMessage('Bu talep artık iptal edilemez.', 'error');
+                redirect('/account/returns');
+                return;
+            }
+
+            // Update status to rejected (user cancelled)
+            $sql = "UPDATE returns SET status = 'rejected', rejection_reason = 'Müşteri tarafından iptal edildi', updated_at = NOW() WHERE id = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$id]);
+
+            setFlashMessage('İade talebiniz iptal edildi.', 'success');
+        } catch (Exception $e) {
+            error_log("Cancel return error: " . $e->getMessage());
+            setFlashMessage('İade talebi iptal edilirken bir hata oluştu.', 'error');
+        }
+
+        redirect('/account/returns');
+    }
 }
