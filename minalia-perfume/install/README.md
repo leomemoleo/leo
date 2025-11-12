@@ -199,6 +199,32 @@ date_default_timezone_set('Europe/Istanbul');
 3. Delete `/config/config.php`
 4. Access `/install/` again
 
+## 🔄 Upgrading Existing Installation
+
+If you already have MINALIA installed and want to upgrade to a new version:
+
+### Automatic Migration (Recommended)
+
+```bash
+# Run the migration script
+php install/migrate.php
+```
+
+The migration script will:
+- ✅ Check current database version
+- ✅ Run only pending migrations
+- ✅ Track executed migrations
+- ✅ Rollback on errors
+
+### Manual Migration
+
+Run specific migration files:
+```bash
+mysql -u username -p database_name < install/migrations/015_add_search_indexes.sql
+```
+
+**See:** `install/UPGRADE.md` for detailed upgrade instructions
+
 ## 📞 Support
 
 For issues:
@@ -206,6 +232,7 @@ For issues:
 2. Check `/database/` SQL files exist
 3. Verify PHP error logs
 4. Ensure MySQL credentials are correct
+5. For upgrades, see `UPGRADE.md`
 
 ## ⚡ Quick Install
 

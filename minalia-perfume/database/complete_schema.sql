@@ -94,6 +94,17 @@ CREATE TABLE products (
     INDEX idx_bestseller (is_bestseller),
     INDEX idx_price (price),
     INDEX idx_rating (rating),
+    INDEX idx_price_range (price),
+    INDEX idx_gender (gender),
+    INDEX idx_active (is_active),
+    INDEX idx_featured_active (is_featured, is_active),
+    INDEX idx_bestseller_active (is_bestseller, is_active),
+    INDEX idx_new_active (is_new, is_active),
+    INDEX idx_stock (stock_quantity),
+    INDEX idx_rating_reviews (rating, review_count),
+    INDEX idx_category_price (category_id, price, is_active),
+    INDEX idx_brand_price (brand_id, price, is_active),
+    INDEX idx_launch_year (launch_year),
     FULLTEXT INDEX idx_fulltext (name, description)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -678,3 +689,60 @@ Evet, tüm ürünlerimiz %100 orijinal olup, yetkili distribütörlerden temin e
 'Kullanım Koşulları | MINALIA',
 'MINALIA kullanım koşulları, iade politikası ve şartlar.',
 1);
+
+-- ==========================================
+-- FACETED SEARCH & ANALYTICS TABLES
+-- Added: 2025-11-12 for PWA & Faceted Search (FAZ 5)
+-- ==========================================
+
+-- Search History Table for analytics and autocomplete improvement
+CREATE TABLE IF NOT EXISTS search_history (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NULL,
+    session_id VARCHAR(100) NULL,
+    search_term VARCHAR(255) NOT NULL,
+    result_count INT DEFAULT 0,
+    filters_used JSON NULL,
+    clicked_product_id INT UNSIGNED NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (clicked_product_id) REFERENCES products(id) ON DELETE SET NULL,
+
+    INDEX idx_search_term (search_term),
+    INDEX idx_user_id (user_id),
+    INDEX idx_session_id (session_id),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Popular Searches Tracking Table
+CREATE TABLE IF NOT EXISTS popular_searches (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    search_term VARCHAR(255) UNIQUE NOT NULL,
+    search_count INT DEFAULT 1,
+    last_searched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    is_trending BOOLEAN DEFAULT FALSE,
+
+    INDEX idx_search_count (search_count DESC),
+    INDEX idx_trending (is_trending, search_count DESC),
+    INDEX idx_last_searched (last_searched_at DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Filter Analytics Table for tracking filter combinations
+CREATE TABLE IF NOT EXISTS filter_analytics (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    filter_combination JSON NOT NULL,
+    usage_count INT DEFAULT 1,
+    avg_result_count DECIMAL(10,2) DEFAULT 0,
+    conversion_count INT DEFAULT 0,
+    last_used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    INDEX idx_usage_count (usage_count DESC),
+    INDEX idx_last_used (last_used_at DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add missing indexes for categories (hierarchical queries optimization)
+ALTER TABLE categories ADD INDEX idx_parent_active (parent_id, is_active, sort_order);
+
+-- Add missing indexes for brands (filtering optimization)
+ALTER TABLE brands ADD INDEX idx_featured_sort (is_featured, sort_order);
