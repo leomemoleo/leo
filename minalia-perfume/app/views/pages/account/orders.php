@@ -114,6 +114,7 @@
                                         </div>
                                         <div style="display: flex; gap: 0.75rem;">
                                             <form method="POST" action="/account/orders/reorder/<?= $order['id'] ?>" style="display: inline;">
+                                                <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
                                                 <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1.25rem;">
                                                     <i class="fas fa-redo"></i> Tekrar Sipariş Ver
                                                 </button>

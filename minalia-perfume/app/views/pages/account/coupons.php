@@ -165,7 +165,7 @@
                                         <?php foreach ($usage_history as $history): ?>
                                             <tr style="border-bottom: 1px solid #eee;">
                                                 <td style="padding: 1rem;">
-                                                    <?= date('d.m.Y H:i', strtotime($history['created_at'])) ?>
+                                                    <?= date('d.m.Y H:i', strtotime($history['used_at'])) ?>
                                                 </td>
                                                 <td style="padding: 1rem;">
                                                     <strong><?= htmlspecialchars($history['code']) ?></strong><br>

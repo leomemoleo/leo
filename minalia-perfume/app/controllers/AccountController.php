@@ -1472,6 +1472,13 @@ class AccountController extends BaseController {
             return;
         }
 
+        // CSRF validation
+        if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
+            setFlashMessage('Güvenlik hatası. Lütfen tekrar deneyin.', 'error');
+            redirect('/account/orders');
+            return;
+        }
+
         $userId = getCurrentUserId();
 
         try {
@@ -1621,7 +1628,8 @@ class AccountController extends BaseController {
         }
 
         // Get usage history
-        $historySql = "SELECT cul.*, c.code, c.title, o.order_number, o.created_at
+        $historySql = "SELECT cul.*, c.code, c.title, o.order_number,
+                       cul.used_at as coupon_used_at, o.created_at as order_date
                        FROM coupon_usage_log cul
                        INNER JOIN coupons c ON cul.coupon_id = c.id
                        INNER JOIN orders o ON cul.order_id = o.id
@@ -1764,9 +1772,11 @@ class AccountController extends BaseController {
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$userId, $reason, $deletionDate]);
 
-            // Update user preferences
-            $prefSql = "UPDATE user_preferences SET right_to_deletion_requested_at = NOW()
-                        WHERE user_id = ?";
+            // Update user preferences (INSERT if not exists)
+            $prefSql = "INSERT INTO user_preferences (user_id, right_to_deletion_requested_at)
+                        VALUES (?, NOW())
+                        ON DUPLICATE KEY UPDATE
+                        right_to_deletion_requested_at = NOW()";
             $prefStmt = $this->db->prepare($prefSql);
             $prefStmt->execute([$userId]);
 
@@ -1810,9 +1820,18 @@ class AccountController extends BaseController {
 
         try {
             // Collect all user data
+            $userInfo = $this->userModel->find($userId);
+
+            // SECURITY: Remove sensitive fields before export
+            unset($userInfo['password']);
+            unset($userInfo['reset_token']);
+            unset($userInfo['reset_token_expire']);
+            unset($userInfo['verification_token']);
+
             $userData = [
                 'export_date' => date('Y-m-d H:i:s'),
-                'user_info' => $this->userModel->find($userId),
+                'export_info' => 'KVKK - Kişisel Verilerin Korunması Kanunu uyarınca veri taşınabilirliği hakkınız',
+                'user_info' => $userInfo,
                 'addresses' => [],
                 'orders' => [],
                 'reviews' => [],
@@ -1857,9 +1876,11 @@ class AccountController extends BaseController {
                 'KVKK right to portability'
             ]);
 
-            // Update preference
-            $updateSql = "UPDATE user_preferences SET right_to_portability_exercised_at = NOW()
-                          WHERE user_id = ?";
+            // Update preference (INSERT if not exists)
+            $updateSql = "INSERT INTO user_preferences (user_id, right_to_portability_exercised_at)
+                          VALUES (?, NOW())
+                          ON DUPLICATE KEY UPDATE
+                          right_to_portability_exercised_at = NOW()";
             $updateStmt = $this->db->prepare($updateSql);
             $updateStmt->execute([$userId]);
 
