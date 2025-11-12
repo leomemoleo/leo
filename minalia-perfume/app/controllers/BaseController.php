@@ -18,7 +18,7 @@ class BaseController {
         ob_start();
 
         // Check if view file exists
-        $viewFile = APP_PATH . '/views/pages/' . $viewPath . '.php';
+        $viewFile = APP_PATH . '/views/' . $viewPath . '.php';
 
         if (file_exists($viewFile)) {
             require $viewFile;
