@@ -1,0 +1,128 @@
+<?php
+/**
+ * Turkish (Türkçe) - Common Translations
+ */
+
+return [
+    // General
+    'welcome' => 'Hoş Geldiniz',
+    'home' => 'Ana Sayfa',
+    'about' => 'Hakkımızda',
+    'contact' => 'İletişim',
+    'search' => 'Ara',
+    'view_all' => 'Tümünü Gör',
+    'read_more' => 'Devamını Oku',
+    'show_more' => 'Daha Fazla Göster',
+    'show_less' => 'Daha Az Göster',
+    'close' => 'Kapat',
+    'cancel' => 'İptal',
+    'save' => 'Kaydet',
+    'delete' => 'Sil',
+    'edit' => 'Düzenle',
+    'update' => 'Güncelle',
+    'create' => 'Oluştur',
+    'submit' => 'Gönder',
+    'confirm' => 'Onayla',
+    'back' => 'Geri',
+    'next' => 'İleri',
+    'previous' => 'Önceki',
+    'loading' => 'Yükleniyor...',
+    'please_wait' => 'Lütfen Bekleyin...',
+    'yes' => 'Evet',
+    'no' => 'Hayır',
+
+    // Navigation
+    'menu' => 'Menü',
+    'products' => 'Ürünler',
+    'categories' => 'Kategoriler',
+    'brands' => 'Markalar',
+    'new_arrivals' => 'Yeni Gelenler',
+    'best_sellers' => 'Çok Satanlar',
+    'on_sale' => 'İndirimde',
+    'my_account' => 'Hesabım',
+    'login' => 'Giriş Yap',
+    'register' => 'Kayıt Ol',
+    'logout' => 'Çıkış Yap',
+
+    // E-commerce
+    'add_to_cart' => 'Sepete Ekle',
+    'add_to_wishlist' => 'Favorilere Ekle',
+    'buy_now' => 'Hemen Al',
+    'cart' => 'Sepet',
+    'wishlist' => 'Favoriler',
+    'checkout' => 'Ödeme',
+    'price' => 'Fiyat',
+    'quantity' => 'Adet',
+    'subtotal' => 'Ara Toplam',
+    'total' => 'Toplam',
+    'discount' => 'İndirim',
+    'shipping' => 'Kargo',
+    'tax' => 'KDV',
+    'free_shipping' => 'Ücretsiz Kargo',
+    'in_stock' => 'Stokta',
+    'out_of_stock' => 'Stok Yok',
+    'product_details' => 'Ürün Detayları',
+    'specifications' => 'Özellikler',
+    'reviews' => 'Yorumlar',
+    'rating' => 'Değerlendirme',
+
+    // Forms
+    'name' => 'Ad',
+    'surname' => 'Soyad',
+    'email' => 'E-posta',
+    'password' => 'Şifre',
+    'password_confirm' => 'Şifre Tekrar',
+    'phone' => 'Telefon',
+    'address' => 'Adres',
+    'city' => 'Şehir',
+    'state' => 'İl/Eyalet',
+    'country' => 'Ülke',
+    'postal_code' => 'Posta Kodu',
+    'message' => 'Mesaj',
+    'subject' => 'Konu',
+
+    // Messages
+    'success' => 'Başarılı!',
+    'error' => 'Hata!',
+    'warning' => 'Uyarı!',
+    'info' => 'Bilgi',
+    'added_to_cart' => 'Ürün sepete eklendi',
+    'added_to_wishlist' => 'Ürün favorilere eklendi',
+    'removed_from_cart' => 'Ürün sepetten çıkarıldı',
+    'removed_from_wishlist' => 'Ürün favorilerden çıkarıldı',
+    'cart_updated' => 'Sepet güncellendi',
+    'thank_you' => 'Teşekkür Ederiz!',
+    'order_received' => 'Siparişiniz alındı',
+
+    // Time
+    'today' => 'Bugün',
+    'yesterday' => 'Dün',
+    'tomorrow' => 'Yarın',
+    'this_week' => 'Bu Hafta',
+    'this_month' => 'Bu Ay',
+    'this_year' => 'Bu Yıl',
+
+    // Units
+    'ml' => 'ml',
+    'piece' => 'adet',
+    'box' => 'kutu',
+
+    // Footer
+    'all_rights_reserved' => 'Tüm hakları saklıdır',
+    'privacy_policy' => 'Gizlilik Politikası',
+    'terms_conditions' => 'Kullanım Koşulları',
+    'return_policy' => 'İade Politikası',
+    'newsletter' => 'Bülten',
+    'subscribe' => 'Abone Ol',
+    'follow_us' => 'Bizi Takip Edin',
+    'social_media' => 'Sosyal Medya',
+
+    // Perfume specific
+    'fragrance_family' => 'Koku Ailesi',
+    'top_notes' => 'Üst Notalar',
+    'middle_notes' => 'Orta Notalar',
+    'base_notes' => 'Alt Notalar',
+    'for_men' => 'Erkek',
+    'for_women' => 'Kadın',
+    'unisex' => 'Unisex',
+];

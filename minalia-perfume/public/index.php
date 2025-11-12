@@ -68,6 +68,13 @@ $router->post('/forgot-password', 'AuthController@forgotPassword', 'auth.forgot.
 $router->get('/reset-password/{token}', 'AuthController@resetPasswordForm', 'auth.reset');
 $router->post('/reset-password', 'AuthController@resetPassword', 'auth.reset.post');
 
+// Social Login (OAuth)
+$router->get('/auth/google', 'OAuthController@googleLogin', 'oauth.google');
+$router->get('/auth/google/callback', 'OAuthController@googleCallback', 'oauth.google.callback');
+$router->get('/auth/facebook', 'OAuthController@facebookLogin', 'oauth.facebook');
+$router->get('/auth/facebook/callback', 'OAuthController@facebookCallback', 'oauth.facebook.callback');
+$router->post('/auth/disconnect', 'OAuthController@disconnect', 'oauth.disconnect');
+
 // User Account
 $router->group('/account', function($router) {
     $router->get('/', 'AccountController@dashboard', 'account.dashboard');

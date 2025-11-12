@@ -111,6 +111,16 @@ $routes = [
     // Reports
     'reports' => 'AdminReportController@index',
     'ai-reports' => 'AdminReportController@aiReports',
+
+    // SMS Management
+    'sms' => 'AdminSmsController@index',
+    'sms/send' => 'AdminSmsController@send',
+    'sms/send-bulk' => 'AdminSmsController@sendBulk',
+    'sms/templates' => 'AdminSmsController@templates',
+    'sms/edit-template' => 'AdminSmsController@editTemplate',
+    'sms/settings' => 'AdminSmsController@settings',
+    'sms/get-logs' => 'AdminSmsController@getLogs',
+    'sms/test-connection' => 'AdminSmsController@testConnection',
 ];
 
 // Find matching route
