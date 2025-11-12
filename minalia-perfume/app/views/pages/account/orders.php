@@ -112,9 +112,16 @@
                                             <i class="fas fa-map-marker-alt"></i>
                                             <?= htmlspecialchars($order['shipping_city']) ?>, <?= htmlspecialchars($order['shipping_country']) ?>
                                         </div>
-                                        <a href="/account/orders/<?= $order['order_number'] ?>" class="btn btn-outline" style="padding: 0.5rem 1.5rem;">
-                                            <i class="fas fa-eye"></i> Detayları Gör
-                                        </a>
+                                        <div style="display: flex; gap: 0.75rem;">
+                                            <form method="POST" action="/account/orders/reorder/<?= $order['id'] ?>" style="display: inline;">
+                                                <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1.25rem;">
+                                                    <i class="fas fa-redo"></i> Tekrar Sipariş Ver
+                                                </button>
+                                            </form>
+                                            <a href="/account/orders/<?= $order['order_number'] ?>" class="btn btn-outline" style="padding: 0.5rem 1.5rem;">
+                                                <i class="fas fa-eye"></i> Detayları Gör
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

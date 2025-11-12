@@ -214,14 +214,22 @@
                 </div>
 
                 <!-- Actions -->
-                <?php if ($order['status'] !== 'cancelled' && $order['status'] !== 'delivered'): ?>
-                    <div style="margin-top: 1.5rem; text-align: center;">
+                <div style="margin-top: 1.5rem; display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+                    <!-- Reorder Button -->
+                    <form method="POST" action="/account/orders/reorder/<?= $order['id'] ?>" style="display: inline;">
+                        <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2rem;">
+                            <i class="fas fa-redo"></i> Tekrar Sipariş Ver
+                        </button>
+                    </form>
+
+                    <!-- Cancel Button (only for active orders) -->
+                    <?php if ($order['status'] !== 'cancelled' && $order['status'] !== 'delivered'): ?>
                         <button onclick="if(confirm('Siparişi iptal etmek istediğinizden emin misiniz?')) { cancelOrder('<?= $order['id'] ?>'); }"
                                 class="btn btn-outline" style="padding: 0.75rem 2rem;">
                             <i class="fas fa-times"></i> Siparişi İptal Et
                         </button>
-                    </div>
-                <?php endif; ?>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>

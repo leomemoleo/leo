@@ -1424,4 +1424,114 @@ class AccountController extends BaseController {
             'social_accounts' => $socialAccounts
         ]);
     }
+
+    /**
+     * Reorder - Add all items from a previous order to cart
+     */
+    public function reorder($orderId) {
+        if (!isLoggedIn()) {
+            redirect('/login');
+            return;
+        }
+
+        $userId = getCurrentUserId();
+
+        try {
+            // Verify order belongs to user
+            $orderSql = "SELECT id FROM orders WHERE id = ? AND user_id = ?";
+            $orderStmt = $this->db->prepare($orderSql);
+            $orderStmt->execute([$orderId, $userId]);
+            $order = $orderStmt->fetch();
+
+            if (!$order) {
+                setFlashMessage('Sipariş bulunamadı.', 'error');
+                redirect('/account/orders');
+                return;
+            }
+
+            // Get order items with product availability check
+            $itemsSql = "SELECT oi.product_id, oi.quantity, p.name, p.stock_quantity, p.is_active, p.price
+                         FROM order_items oi
+                         INNER JOIN products p ON oi.product_id = p.id
+                         WHERE oi.order_id = ?";
+            $itemsStmt = $this->db->prepare($itemsSql);
+            $itemsStmt->execute([$orderId]);
+            $items = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if (empty($items)) {
+                setFlashMessage('Bu siparişte ürün bulunamadı.', 'error');
+                redirect('/account/orders/' . $orderId);
+                return;
+            }
+
+            // Initialize cart if not exists
+            if (!isset($_SESSION['cart'])) {
+                $_SESSION['cart'] = [];
+            }
+
+            $addedCount = 0;
+            $skippedProducts = [];
+
+            foreach ($items as $item) {
+                // Check if product is available
+                if ($item['is_active'] == 0) {
+                    $skippedProducts[] = $item['name'] . ' (Ürün aktif değil)';
+                    continue;
+                }
+
+                // Check stock
+                if ($item['stock_quantity'] < $item['quantity']) {
+                    if ($item['stock_quantity'] > 0) {
+                        // Add available stock
+                        $_SESSION['cart'][$item['product_id']] = [
+                            'product_id' => $item['product_id'],
+                            'quantity' => $item['stock_quantity'],
+                            'price' => $item['price']
+                        ];
+                        $skippedProducts[] = $item['name'] . ' (Sadece ' . $item['stock_quantity'] . ' adet mevcut)';
+                        $addedCount++;
+                    } else {
+                        $skippedProducts[] = $item['name'] . ' (Stokta yok)';
+                    }
+                    continue;
+                }
+
+                // Add to cart (or update quantity if already in cart)
+                if (isset($_SESSION['cart'][$item['product_id']])) {
+                    $_SESSION['cart'][$item['product_id']]['quantity'] += $item['quantity'];
+                } else {
+                    $_SESSION['cart'][$item['product_id']] = [
+                        'product_id' => $item['product_id'],
+                        'quantity' => $item['quantity'],
+                        'price' => $item['price']
+                    ];
+                }
+
+                $addedCount++;
+            }
+
+            // Build success message
+            $message = '';
+            if ($addedCount > 0) {
+                $message = $addedCount . ' ürün sepete eklendi.';
+            }
+
+            if (!empty($skippedProducts)) {
+                $message .= ' Bazı ürünler eklenemedi: ' . implode(', ', $skippedProducts);
+            }
+
+            if ($addedCount > 0) {
+                setFlashMessage($message, 'success');
+                redirect('/cart');
+            } else {
+                setFlashMessage('Hiçbir ürün sepete eklenemedi. ' . implode(', ', $skippedProducts), 'error');
+                redirect('/account/orders/' . $orderId);
+            }
+
+        } catch (Exception $e) {
+            error_log('Reorder error: ' . $e->getMessage());
+            setFlashMessage('Tekrar sipariş verme sırasında bir hata oluştu.', 'error');
+            redirect('/account/orders/' . $orderId);
+        }
+    }
 }

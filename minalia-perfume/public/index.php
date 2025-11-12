@@ -82,6 +82,7 @@ $router->group('/account', function($router) {
     $router->post('/profile', 'AccountController@updateProfile', 'account.profile.update');
     $router->get('/orders', 'AccountController@orders', 'account.orders');
     $router->get('/orders/{orderNumber}', 'AccountController@orderDetail', 'account.order.detail');
+    $router->post('/orders/reorder/{orderId}', 'AccountController@reorder', 'account.orders.reorder');
     $router->get('/addresses', 'AccountController@addresses', 'account.addresses');
     $router->post('/addresses/add', 'AccountController@addAddress', 'account.addresses.add');
     $router->post('/addresses/update/{id}', 'AccountController@updateAddress', 'account.addresses.update');
