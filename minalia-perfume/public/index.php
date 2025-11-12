@@ -14,6 +14,25 @@ require_once __DIR__ . '/../config/database.php';
 // Load helpers
 require_once __DIR__ . '/../app/helpers/functions.php';
 
+// Get request URI
+$requestUri = $_SERVER['REQUEST_URI'];
+
+// Install Wizard Redirect
+// If URL starts with /install, redirect to install wizard
+if (strpos($requestUri, '/install') === 0 || strpos($requestUri, '/install/') !== false) {
+    require_once __DIR__ . '/../install/index.php';
+    exit;
+}
+
+// Admin Panel Redirect
+// If URL starts with /admin, redirect to admin panel
+if (strpos($requestUri, '/admin') === 0 || strpos($requestUri, '/admin/') !== false) {
+    // Extract the admin path
+    $adminPath = preg_replace('#^.*/admin#', '', $requestUri);
+    require_once __DIR__ . '/../admin/index.php';
+    exit;
+}
+
 // Load Router
 require_once __DIR__ . '/../app/Router.php';
 

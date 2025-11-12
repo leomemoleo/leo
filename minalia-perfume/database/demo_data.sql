@@ -1,92 +1,103 @@
--- MINALIA Parfüm - Demo Verileri
--- Test için örnek kategoriler, markalar ve ürünler
+-- ========================================
+-- MINALIA Parfüm - Demo Data
+-- Realistic Product, Brand & Category Data
+-- ========================================
 
+-- Clear existing demo data (optional - comment out if you want to keep existing data)
+-- DELETE FROM order_items WHERE order_id IN (SELECT id FROM orders);
+-- DELETE FROM orders;
+-- DELETE FROM reviews;
+-- DELETE FROM products;
+-- DELETE FROM brands;
+-- DELETE FROM categories WHERE id > 4;
 
--- Kategoriler
-INSERT INTO categories (name, slug, description, sort_order, is_active) VALUES
-('Erkek Parfüm', 'erkek-parfum', 'Erkekler için özel parfümler', 1, 1),
-('Kadın Parfüm', 'kadin-parfum', 'Kadınlar için özel parfümler', 2, 1),
-('Unisex Parfüm', 'unisex-parfum', 'Herkes için parfümler', 3, 1),
-('Niş Parfüm', 'nis-parfum', 'Özel ve niş parfümler', 4, 1);
+-- ========================================
+-- BRANDS (Lüks Parfüm Markaları)
+-- ========================================
 
--- Markalar
-INSERT INTO brands (name, slug, description, country, is_featured, sort_order) VALUES
-('Chanel', 'chanel', 'Fransız lüks marka', 'Fransa', 1, 1),
-('Dior', 'dior', 'Prestijli parfüm markası', 'Fransa', 1, 2),
-('Tom Ford', 'tom-ford', 'Modern lüks parfümler', 'ABD', 1, 3),
-('Creed', 'creed', 'Niş parfüm üreticisi', 'İngiltere', 1, 4),
-('Jo Malone', 'jo-malone', 'İngiliz parfüm markası', 'İngiltere', 1, 5);
+INSERT INTO brands (name, slug, description, logo, is_featured, sort_order, created_at) VALUES
+('Chanel', 'chanel', 'Fransız lüks moda ve güzellik markası. 1910 yılında Coco Chanel tarafından kuruldu.', NULL, 1, 1, NOW()),
+('Dior', 'dior', 'Christian Dior\'un kurduğu Fransız lüks moda ve koku markası.', NULL, 1, 2, NOW()),
+('Tom Ford', 'tom-ford', 'Amerikan lüks moda tasarımcısı ve markası. Modern ve seksi kokular.', NULL, 1, 3, NOW()),
+('Creed', 'creed', '1760 yılından beri el yapımı lüks parfümler üreten İngiliz markası.', NULL, 1, 4, NOW()),
+('Jo Malone', 'jo-malone', 'Britanya kökenli lüks niş parfüm markası. Zarif ve sofistike kokular.', NULL, 1, 5, NOW()),
+('Yves Saint Laurent', 'yves-saint-laurent', 'İkonik Fransız moda ve güzellik markası.', NULL, 1, 6, NOW()),
+('Armani', 'armani', 'İtalyan lüks moda ve koku evi Giorgio Armani.', NULL, 1, 7, NOW()),
+('Gucci', 'gucci', 'İtalyan lüks moda ve aksesuar markası.', NULL, 1, 8, NOW()),
+('Versace', 'versace', 'İtalyan lüks moda ve koku markası Gianni Versace.', NULL, 0, 9, NOW()),
+('Burberry', 'burberry', 'İngiliz lüks moda markası, klasik ve zarif kokular.', NULL, 0, 10, NOW()),
+('Paco Rabanne', 'paco-rabanne', 'İspanyol moda tasarımcısı ve parfüm markası.', NULL, 0, 11, NOW()),
+('Calvin Klein', 'calvin-klein', 'Amerikan moda markası, modern ve minimal kokular.', NULL, 0, 12, NOW()),
+('Hermès', 'hermes', 'Fransız lüks moda ve deri ürünleri markası.', NULL, 1, 13, NOW()),
+('Bvlgari', 'bvlgari', 'İtalyan lüks mücevher ve parfüm markası.', NULL, 0, 14, NOW()),
+('Dolce & Gabbana', 'dolce-gabbana', 'İtalyan lüks moda dünyasının iki büyük ismi.', NULL, 0, 15, NOW());
 
--- Ürünler
-INSERT INTO products (sku, name, slug, brand_id, category_id, description, short_description, price, sale_price, stock_quantity, fragrance_notes, gender, launch_year, perfumer, is_featured, is_new, is_bestseller, rating, review_count) VALUES
--- Chanel Ürünleri
-('CHANEL-001', 'Chanel No. 5 Eau de Parfum', 'chanel-no-5-eau-de-parfum', 1, 2, 'Dünyanın en ünlü parfümü. Zarif ve sofistike bir koku.', 'Klasik ve zamansız kadın parfümü', 3500.00, 2999.00, 15, '{"ust": ["Neroli", "Ylang-Ylang"], "orta": ["Jasmine", "Rose"], "alt": ["Vetiver", "Sandalwood"]}', 'women', 1921, 'Ernest Beaux', 1, 0, 1, 4.8, 156),
+-- ========================================
+-- PRODUCTS (Top 20 Bestsellers)
+-- ========================================
 
-('CHANEL-002', 'Bleu de Chanel Eau de Toilette', 'bleu-de-chanel-eau-de-toilette', 1, 1, 'Modern ve güçlü erkek parfümü. Taze ve odunsu notalar.', 'Erkeksi ve karizmatik koku', 2800.00, NULL, 22, '{"ust": ["Bergamot", "Limon"], "orta": ["Zencefil", "Jasmine"], "alt": ["Cedar", "Sandalwood"]}', 'men', 2010, 'Jacques Polge', 1, 1, 1, 4.7, 203),
+-- Chanel Products
+INSERT INTO products (name, slug, description, price, stock_quantity, category_id, brand_id, gender, size, notes, launch_year, is_featured, is_bestseller, is_new, rating, review_count, created_at) VALUES
+('Chanel No. 5 Eau de Parfum', 'chanel-no-5-edp', 'Dünyanın en ünlü parfümü. Aldehitli çiçek buketi, kadınlığın sembolü.', 3500.00, 45, 2, 1, 'kadın', '100ml', 'Aldehydes, Ylang-Ylang, Neroli, Jasmine, Rose, Sandalwood, Vanilla', 1921, 1, 1, 0, 4.8, 342, NOW()),
+('Bleu de Chanel Eau de Toilette', 'bleu-de-chanel-edt', 'Erkek zarafetini ve özgürlüğünü yansıtan modern koku.', 2800.00, 38, 1, 1, 'erkek', '100ml', 'Grapefruit, Lemon, Mint, Pink Pepper, Vetiver, Cedar, Incense', 2010, 1, 1, 0, 4.7, 289, NOW()),
+('Chanel Chance Eau Tendre', 'chanel-chance-eau-tendre', 'Genç ve tazeleyici çiçeksi-meyve notaları ile kadın parfümü.', 3200.00, 52, 2, 1, 'kadın', '100ml', 'Grapefruit, Quince, Jasmine, White Musk, Rose', 2010, 1, 0, 0, 4.6, 178, NOW()),
 
--- Dior Ürünleri
-('DIOR-001', 'Dior Sauvage Eau de Parfum', 'dior-sauvage-eau-de-parfum', 2, 1, 'Vahşi ve özgür ruh. Erkeksi ve güçlü bir parfüm.', 'En çok satan erkek parfümü', 3200.00, 2799.00, 18, '{"ust": ["Bergamot", "Pepper"], "orta": ["Lavender", "Geranium"], "alt": ["Amberwood", "Patchouli"]}', 'men', 2015, 'François Demachy', 1, 0, 1, 4.9, 421),
+-- Dior Products
+('Dior Sauvage Eau de Toilette', 'dior-sauvage-edt', 'En çok satan erkek parfümü. Vahşi ve çekici koku.', 2700.00, 65, 1, 2, 'erkek', '100ml', 'Bergamot, Pepper, Lavender, Pink Pepper, Vetiver, Patchouli, Cedar', 2015, 1, 1, 0, 4.9, 512, NOW()),
+('Miss Dior Blooming Bouquet', 'miss-dior-blooming-bouquet', 'Taze ve romantik pembe şakayık notaları ile kadın parfümü.', 3100.00, 48, 2, 2, 'kadın', '100ml', 'Mandarin, Peony, Rose, White Musk', 2014, 1, 1, 0, 4.7, 298, NOW()),
+('J\'adore Dior Eau de Parfum', 'jadore-dior-edp', 'Lüks çiçek buketi, kadınlığın ve zarafetin kokusu.', 3600.00, 42, 2, 2, 'kadın', '100ml', 'Ylang-Ylang, Rose, Jasmine Sambac, Tuberose', 1999, 1, 1, 0, 4.8, 445, NOW()),
 
-('DIOR-002', 'Miss Dior Blooming Bouquet', 'miss-dior-blooming-bouquet', 2, 2, 'Taze ve romantik çiçek buketi. Genç ve zarif.', 'Bahar kokulu kadın parfümü', 2950.00, NULL, 12, '{"ust": ["Mandalina", "Bergamot"], "orta": ["Gül", "Şakayık"], "alt": ["Beyaz Misk"]}', 'women', 2014, 'François Demachy', 1, 1, 0, 4.6, 187),
+-- Tom Ford Products
+('Tom Ford Oud Wood', 'tom-ford-oud-wood', 'Doğu\'nun en nadide malzemesi oud ile zenginleştirilmiş unisex parfüm.', 6500.00, 22, 3, 3, 'unisex', '100ml', 'Oud, Rosewood, Cardamom, Sandalwood, Vetiver, Tonka Bean, Amber', 2007, 1, 1, 0, 4.9, 267, NOW()),
+('Tom Ford Black Orchid', 'tom-ford-black-orchid', 'Siyah orkide ile süslenmiş lüks ve gizemli unisex koku.', 5800.00, 31, 3, 3, 'unisex', '100ml', 'Black Truffle, Ylang-Ylang, Bergamot, Black Orchid, Lotus, Patchouli, Vanilla', 2006, 1, 1, 0, 4.8, 334, NOW()),
+('Tom Ford Tobacco Vanille', 'tom-ford-tobacco-vanille', 'Tütün ve vanilya ile baharatlaştırılmış zengin unisex parfüm.', 7200.00, 18, 3, 3, 'unisex', '100ml', 'Tobacco Leaf, Vanilla, Ginger, Tonka Bean, Cacao, Dried Fruits', 2007, 1, 0, 1, 4.9, 289, NOW()),
 
--- Tom Ford Ürünleri
-('TOMFORD-001', 'Tom Ford Oud Wood', 'tom-ford-oud-wood', 3, 3, 'Egzotik oud ve baharat karışımı. Lüks ve zengin.', 'Niş oud parfümü', 8500.00, 7999.00, 8, '{"ust": ["Kırmızı Biber", "Kardamon"], "orta": ["Oud", "Gülağacı"], "alt": ["Amber", "Vetiver"]}', 'unisex', 2007, 'Richard Herpin', 1, 0, 0, 4.8, 92),
+-- Creed Products
+('Creed Aventus', 'creed-aventus', 'Modern efsane. Başarı, güç ve güzelliğin kokusu.', 8500.00, 35, 1, 4, 'erkek', '100ml', 'Pineapple, Bergamot, Apple, Birch, Patchouli, Jasmine, Musk, Oakmoss, Ambergris, Vanilla', 2010, 1, 1, 0, 5.0, 678, NOW()),
+('Creed Silver Mountain Water', 'creed-silver-mountain-water', 'İsviçre dağlarından esinlenen ferah ve temiz unisex koku.', 7800.00, 28, 3, 4, 'unisex', '100ml', 'Bergamot, Mandarin, Green Tea, Black Currant, Sandalwood, Musk', 1995, 1, 1, 0, 4.8, 245, NOW()),
 
-('TOMFORD-002', 'Tom Ford Black Orchid', 'tom-ford-black-orchid', 3, 2, 'Karanlık ve gizemli. Çikolata ve orkide notaları.', 'Gizemli kadın parfümü', 7200.00, NULL, 10, '{"ust": ["Trüf", "Bergamot"], "orta": ["Siyah Orkide", "Yasemin"], "alt": ["Patchouli", "Vanilya"]}', 'women', 2006, 'David Apel', 1, 0, 1, 4.7, 256),
+-- Jo Malone Products
+('Jo Malone Wood Sage & Sea Salt', 'jo-malone-wood-sage-sea-salt', 'İngiliz sahillerinden esinlenen taze ve doğal unisex koku.', 4200.00, 40, 3, 5, 'unisex', '100ml', 'Ambrette Seeds, Sea Salt, Sage, Red Algae, Grapefruit', 2014, 1, 1, 0, 4.6, 289, NOW()),
+('Jo Malone English Pear & Freesia', 'jo-malone-english-pear-freesia', 'Tatlı armut ve çiçek notaları ile zarif unisex parfüm.', 3900.00, 36, 3, 5, 'unisex', '100ml', 'Pear, Freesia, Rose, Patchouli, Amber, Rhuburb', 2010, 1, 1, 0, 4.7, 312, NOW()),
 
--- Creed Ürünleri
-('CREED-001', 'Creed Aventus', 'creed-aventus', 4, 1, 'Güç ve başarının kokusu. Meyvemsi ve odunsu.', 'Efsanevi niş erkek parfümü', 12500.00, 11999.00, 5, '{"ust": ["Ananas", "Bergamot", "Elma"], "orta": ["Gül", "Yasemin"], "alt": ["Birch", "Misk"]}', 'men', 2010, 'Olivier Creed', 1, 0, 1, 4.9, 523),
+-- YSL Products
+('YSL Black Opium', 'ysl-black-opium', 'Kahve ve vanilya ile bağımlılık yapan kadın parfümü.', 3300.00, 56, 2, 6, 'kadın', '90ml', 'Pink Pepper, Orange Blossom, Coffee, Vanilla, Patchouli, Cedar', 2014, 1, 1, 0, 4.8, 423, NOW()),
+('YSL Y Eau de Toilette', 'ysl-y-edt', 'Modern ve dinamik erkekler için ferahlatıcı koku.', 2600.00, 48, 1, 6, 'erkek', '100ml', 'Apple, Ginger, Bergamot, Sage, Cedarwood, Vetiver, Olibanum', 2017, 1, 1, 0, 4.6, 256, NOW()),
+('YSL Libre', 'ysl-libre', 'Özgür kadının parfümü. Lavanta ve portakal çiçeği.', 3600.00, 42, 2, 6, 'kadın', '90ml', 'Lavender, Mandarin, Black Currant, Orange Blossom, Jasmine, Musk, Vanilla', 2019, 1, 1, 1, 4.7, 289, NOW()),
 
-('CREED-002', 'Creed Silver Mountain Water', 'creed-silver-mountain-water', 4, 3, 'Berrak göl suyu ve dağ esintisi. Ferahlatıcı.', 'Taze unisex parfüm', 9800.00, NULL, 7, '{"ust": ["Bergamot", "Mandalina"], "orta": ["Yeşil Çay"], "alt": ["Misk", "Sandalwood"]}', 'unisex', 1995, 'Olivier Creed', 1, 1, 0, 4.6, 134),
+-- Armani Products
+('Armani Code', 'armani-code', 'Gizemli ve çekici erkek parfümü. Baştan çıkarıcı koku.', 2700.00, 44, 1, 7, 'erkek', '110ml', 'Lemon, Bergamot, Anise, Olive Blossom, Guaiac Wood, Leather, Tonka Bean, Tobacco', 2004, 1, 1, 0, 4.6, 312, NOW()),
+('Acqua di Giò Profumo', 'acqua-di-gio-profumo', 'Deniz ferahlığı ve odunsu notalar ile erkek parfümü.', 3200.00, 50, 1, 7, 'erkek', '125ml', 'Bergamot, Marine Notes, Geranium, Sage, Rosemary, Patchouli, Incense', 2015, 1, 1, 0, 4.8, 456, NOW()),
 
--- Jo Malone Ürünleri
-('JOMALONE-001', 'Jo Malone Wood Sage & Sea Salt', 'jo-malone-wood-sage-sea-salt', 5, 3, 'Sahil esintisi ve tuzlu hava. Doğal ve ferahlatıcı.', 'En popüler Jo Malone kokusu', 4500.00, 3999.00, 14, '{"ust": ["Deniz Tuzu"], "orta": ["Adaçayı"], "alt": ["Ambergris"]}', 'unisex', 2014, 'Christine Nagel', 1, 1, 1, 4.7, 298),
+-- Other Bestsellers
+('Versace Eros', 'versace-eros', 'Tutku ve güç simgesi erkek parfümü.', 2600.00, 54, 1, 9, 'erkek', '100ml', 'Mint, Lemon, Apple, Tonka Bean, Ambroxan, Geranium, Vanilla', 2012, 1, 1, 0, 4.6, 389, NOW()),
+('Paco Rabanne 1 Million', 'paco-rabanne-1-million', 'Altın külçe şeklindeki şişede lüks erkek parfümü.', 2500.00, 60, 1, 11, 'erkek', '100ml', 'Blood Mandarin, Grapefruit, Mint, Cinnamon, Rose, Blond Leather, Amber, Patchouli', 2008, 1, 1, 0, 4.7, 512, NOW());
 
-('JOMALONE-002', 'Jo Malone English Pear & Freesia', 'jo-malone-english-pear-freesia', 5, 2, 'Tatlı armut ve frezya çiçeği. Zarif ve sofistike.', 'Meyveli kadın parfümü', 4200.00, NULL, 16, '{"ust": ["Armut"], "orta": ["Frezya"], "alt": ["Patchouli", "Amber"]}', 'women', 2010, 'Christine Nagel', 0, 1, 0, 4.5, 176);
+-- ========================================
+-- REVIEWS (Sample Reviews)
+-- ========================================
 
--- Ürün varyantları (boyutlar)
-INSERT INTO product_variants (product_id, size, price, stock_quantity, sku_suffix) VALUES
--- Chanel No. 5
-(1, '50ml', 2999.00, 8, '50ML'),
-(1, '100ml', 4500.00, 7, '100ML'),
--- Bleu de Chanel
-(2, '50ml', 2800.00, 12, '50ML'),
-(2, '100ml', 3800.00, 10, '100ML'),
--- Sauvage
-(3, '60ml', 2799.00, 10, '60ML'),
-(3, '100ml', 3999.00, 8, '100ML'),
--- Aventus
-(7, '50ml', 11999.00, 3, '50ML'),
-(7, '100ml', 18500.00, 2, '100ML');
+INSERT INTO reviews (product_id, user_id, rating, title, comment, is_approved, created_at) VALUES
+(1, 1, 5, 'Klasikleşmiş bir parfüm', 'Chanel No. 5 gerçekten efsane. Kalıcılığı mükemmel, kokusuysa tarif edilemez bir zarafet.', 1, DATE_SUB(NOW(), INTERVAL 15 DAY)),
+(2, 1, 5, 'En sevdiğim erkek parfümü', 'Bleu de Chanel tam istediğim gibi. Hem günlük hem özel günler için ideal.', 1, DATE_SUB(NOW(), INTERVAL 12 DAY)),
+(4, 1, 5, 'Herkese tavsiye ederim', 'Dior Sauvage alırken biraz tereddüt ettim ama aldığım en iyi karar oldu. Çok beğeniliyor.', 1, DATE_SUB(NOW(), INTERVAL 8 DAY)),
+(7, 1, 5, 'Oud Wood harika', 'Tom Ford Oud Wood lüksün ta kendisi. Oud notaları çok kaliteli.', 1, DATE_SUB(NOW(), INTERVAL 5 DAY)),
+(10, 1, 5, 'Creed Aventus efsane', 'Aventus gerçekten efsane bir parfüm. Kalıcılığı inanılmaz.', 1, DATE_SUB(NOW(), INTERVAL 3 DAY));
 
--- Ürün görselleri (placeholder)
-INSERT INTO product_images (product_id, image_url, alt_text, is_primary, sort_order) VALUES
-(1, '/images/products/chanel-no-5.jpg', 'Chanel No. 5', 1, 0),
-(2, '/images/products/bleu-de-chanel.jpg', 'Bleu de Chanel', 1, 0),
-(3, '/images/products/dior-sauvage.jpg', 'Dior Sauvage', 1, 0),
-(4, '/images/products/miss-dior.jpg', 'Miss Dior', 1, 0),
-(5, '/images/products/oud-wood.jpg', 'Tom Ford Oud Wood', 1, 0),
-(6, '/images/products/black-orchid.jpg', 'Tom Ford Black Orchid', 1, 0),
-(7, '/images/products/aventus.jpg', 'Creed Aventus', 1, 0),
-(8, '/images/products/silver-mountain.jpg', 'Creed Silver Mountain', 1, 0),
-(9, '/images/products/wood-sage.jpg', 'Jo Malone Wood Sage', 1, 0),
-(10, '/images/products/english-pear.jpg', 'Jo Malone English Pear', 1, 0);
+-- ========================================
+-- ANALYTICS DATA
+-- ========================================
 
--- Test kullanıcısı (şifre: test123)
-INSERT INTO users (email, password, first_name, last_name, phone, gender, newsletter_subscribed, is_active) VALUES
-('test@minalia.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Test', 'Kullanıcı', '+90 555 123 4567', 'male', 1, 1);
+INSERT INTO popular_searches (search_term, search_count, is_trending, last_searched_at) VALUES
+('chanel', 156, 1, NOW()),
+('dior sauvage', 142, 1, NOW()),
+('tom ford', 98, 0, NOW()),
+('creed aventus', 87, 0, NOW()),
+('erkek parfüm', 234, 1, NOW()),
+('kadın parfüm', 198, 1, NOW());
 
--- Örnek yorumlar
-INSERT INTO reviews (product_id, user_id, rating, title, comment, is_verified_purchase, is_approved) VALUES
-(3, 1, 5, 'Harika bir parfüm!', 'Dior Sauvage gerçekten mükemmel. Hem gündüz hem gece kullanabiliyorum. Kalıcılığı çok iyi.', 1, 1),
-(7, 1, 5, 'Pahalı ama değer', 'Creed Aventus fiyatı yüksek ama gerçekten hakkını veriyor. Benzersiz bir koku.', 1, 1),
-(1, 1, 5, 'Klasik ve zarif', 'Chanel No. 5 hiç eskimeyen bir klasik. Annem de kullanıyor, ben de kullanıyorum.', 1, 1);
-
--- Newsletter aboneleri
-INSERT INTO newsletter_subscribers (email, name, is_active) VALUES
-('subscriber1@example.com', 'Abone 1', 1),
-('subscriber2@example.com', 'Abone 2', 1);
-
--- Ayarlar
-UPDATE settings SET setting_value = 'MINALIA Parfüm' WHERE setting_key = 'site_name';
-UPDATE settings SET setting_value = 'Lüks Parfüm Deneyimi' WHERE setting_key = 'site_tagline';
+-- Summary
+SELECT 
+    (SELECT COUNT(*) FROM brands) as brands_count,
+    (SELECT COUNT(*) FROM products) as products_count,
+    (SELECT COUNT(*) FROM reviews) as reviews_count;

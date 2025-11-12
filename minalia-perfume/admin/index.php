@@ -26,11 +26,17 @@ function requireAdminAuth() {
 }
 
 // Simple admin router
-$request = trim($_SERVER['REQUEST_URI'], '/');
-$request = str_replace('admin/', '', $request);
-$request = str_replace('admin', '', $request);
+$request = $_SERVER['REQUEST_URI'];
+// Remove query string
 $parts = explode('?', $request);
-$path = trim($parts[0], '/');
+$path = $parts[0];
+
+// Extract admin path (remove everything before /admin/)
+if (preg_match('#/admin(/.*)?$#', $path, $matches)) {
+    $path = isset($matches[1]) ? trim($matches[1], '/') : '';
+} else {
+    $path = '';
+}
 
 // Route mapping
 $routes = [

@@ -1,0 +1,284 @@
+/* ===================================
+   MINALIA - Mobile Menu Enhancement
+   Improved Mobile Navigation System
+   =================================== */
+
+/* Mobile Menu Toggle Button */
+.mobile-menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--color-primary);
+    cursor: pointer;
+    padding: 0.5rem;
+    transition: transform var(--transition-fast);
+}
+
+.mobile-menu-toggle:hover {
+    transform: scale(1.1);
+}
+
+.mobile-menu-toggle:active {
+    transform: scale(0.95);
+}
+
+/* Mobile Breakpoint */
+@media (max-width: 768px) {
+    /* Show Mobile Toggle */
+    .mobile-menu-toggle {
+        display: block;
+        order: 3;
+    }
+
+    /* Hide Desktop Nav by Default */
+    .header-nav {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(10px);
+        z-index: 9999;
+        padding: 2rem;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Active Mobile Nav */
+    .header-nav.active {
+        display: block;
+        animation: slideInRight 0.3s ease-out;
+    }
+
+    /* Nav Menu Styling */
+    .header-nav .container {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .nav-menu {
+        list-style: none;
+        padding: 0;
+        margin: 4rem 0 0 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .nav-menu > li {
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .nav-menu > li > a {
+        display: block;
+        padding: 1.25rem 1rem;
+        font-size: 1.125rem;
+        font-weight: 500;
+        color: var(--color-text-primary);
+        text-decoration: none;
+        transition: all var(--transition-fast);
+        position: relative;
+    }
+
+    .nav-menu > li > a:hover {
+        color: var(--color-primary);
+        padding-left: 1.5rem;
+        background: var(--color-cream);
+    }
+
+    .nav-menu > li > a::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0;
+        height: 2px;
+        background: var(--color-primary);
+        transition: width var(--transition-fast);
+    }
+
+    .nav-menu > li > a:hover::before {
+        width: 4px;
+    }
+
+    /* Submenu Styling */
+    .nav-menu .has-submenu {
+        position: relative;
+    }
+
+    .nav-menu .has-submenu > a::after {
+        content: '\f107';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        right: 1rem;
+        transition: transform var(--transition-fast);
+    }
+
+    .nav-menu .has-submenu.open > a::after {
+        transform: rotate(180deg);
+    }
+
+    .nav-menu .submenu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        max-height: 0;
+        overflow: hidden;
+        background: var(--color-cream);
+        transition: max-height 0.3s ease-out;
+    }
+
+    .nav-menu .has-submenu.open .submenu {
+        max-height: 500px;
+    }
+
+    .nav-menu .submenu li {
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .nav-menu .submenu li:last-child {
+        border-bottom: none;
+    }
+
+    .nav-menu .submenu a {
+        display: block;
+        padding: 1rem 1rem 1rem 2rem;
+        font-size: 1rem;
+        color: var(--color-text-secondary);
+        text-decoration: none;
+        transition: all var(--transition-fast);
+        position: relative;
+    }
+
+    .nav-menu .submenu a::before {
+        content: '→';
+        position: absolute;
+        left: 1rem;
+        opacity: 0;
+        transition: all var(--transition-fast);
+    }
+
+    .nav-menu .submenu a:hover {
+        color: var(--color-primary);
+        padding-left: 2.5rem;
+        background: rgba(122, 139, 92, 0.1);
+    }
+
+    .nav-menu .submenu a:hover::before {
+        opacity: 1;
+    }
+
+    /* Mobile Menu Close Button */
+    .header-nav.active::before {
+        content: '✕';
+        position: fixed;
+        top: 1.5rem;
+        right: 1.5rem;
+        font-size: 2rem;
+        cursor: pointer;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--color-cream);
+        border-radius: 50%;
+        z-index: 10000;
+        color: var(--color-text-primary);
+        font-weight: 300;
+        box-shadow: var(--shadow-md);
+        transition: all var(--transition-fast);
+    }
+
+    .header-nav.active::before:hover {
+        background: var(--color-primary);
+        color: white;
+        transform: rotate(90deg);
+    }
+
+    /* Mobile Menu Header */
+    .nav-menu::before {
+        content: 'MENÜ';
+        display: block;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--color-primary);
+        margin-bottom: 1rem;
+        padding: 0 1rem;
+        font-family: var(--font-heading);
+    }
+
+    /* Overlay Background */
+    .header-nav.active::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: -1;
+        animation: fadeIn 0.3s ease-out;
+    }
+}
+
+/* Animations */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Small Mobile Adjustments */
+@media (max-width: 480px) {
+    .header-nav {
+        padding: 1.5rem;
+    }
+
+    .nav-menu {
+        margin-top: 3rem;
+    }
+
+    .nav-menu > li > a {
+        font-size: 1rem;
+        padding: 1rem 0.75rem;
+    }
+
+    .nav-menu .submenu a {
+        padding: 0.875rem 0.75rem 0.875rem 1.75rem;
+        font-size: 0.9375rem;
+    }
+}
+
+/* Landscape Mode */
+@media (max-width: 896px) and (orientation: landscape) {
+    .header-nav {
+        padding: 1rem;
+    }
+
+    .nav-menu {
+        margin-top: 2rem;
+    }
+
+    .nav-menu > li > a {
+        padding: 0.875rem 1rem;
+    }
+}

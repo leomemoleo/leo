@@ -40,14 +40,30 @@ class PageController extends BaseController {
     }
 
     /**
+     * About page
+     */
+    public function about() {
+        $this->show('hakkimizda');
+    }
+
+    /**
+     * Privacy policy page
+     */
+    public function privacy() {
+        $this->show('gizlilik-politikasi');
+    }
+
+    /**
+     * Terms and conditions page
+     */
+    public function terms() {
+        $this->show('kullanim-kosullari');
+    }
+
+    /**
      * Contact page with form
      */
     public function contact() {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->processContactForm();
-            return;
-        }
-
         // Get contact page content
         $sql = "SELECT * FROM pages WHERE slug = 'iletisim' AND is_active = 1";
         $stmt = $this->db->query($sql);
@@ -61,9 +77,9 @@ class PageController extends BaseController {
     }
 
     /**
-     * Process contact form
+     * Process contact form submission
      */
-    private function processContactForm() {
+    public function contactSubmit() {
         $name = sanitize($_POST['name'] ?? '');
         $email = sanitize($_POST['email'] ?? '');
         $subject = sanitize($_POST['subject'] ?? '');
