@@ -50,29 +50,104 @@ class ApiController extends BaseController {
     }
 
     /**
-     * Search suggestions API
+     * Enhanced autocomplete/search suggestions API
      */
     public function searchSuggestions() {
-        $query = $this->get('q', '');
+        $query = trim($this->get('q', ''));
 
         if (strlen($query) < 2) {
             $this->json(['success' => false, 'message' => 'Query too short']);
             return;
         }
 
-        $products = $this->productModel->search($query, 5);
+        $db = $this->productModel->db;
 
-        // Get brands
-        $brandModel = new BaseModel();
-        $brandModel->table = 'brands';
-        $brands = [];
+        // Get matching products (top 5)
+        $productsSql = "SELECT id, name, slug, price, main_image, brand_name, rating, review_count
+                        FROM products
+                        WHERE is_active = 1
+                        AND (
+                            name LIKE ? OR
+                            description LIKE ? OR
+                            brand_name LIKE ? OR
+                            MATCH(name, description) AGAINST(? IN NATURAL LANGUAGE MODE)
+                        )
+                        ORDER BY
+                            CASE
+                                WHEN name LIKE ? THEN 1
+                                WHEN name LIKE ? THEN 2
+                                ELSE 3
+                            END,
+                            view_count DESC,
+                            rating DESC
+                        LIMIT 5";
+
+        $searchTerm = '%' . $query . '%';
+        $exactMatch = $query . '%';
+
+        $productsStmt = $db->prepare($productsSql);
+        $productsStmt->execute([$searchTerm, $searchTerm, $searchTerm, $query, $exactMatch, $searchTerm]);
+        $products = $productsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Get matching brands (top 3)
+        $brandsSql = "SELECT b.id, b.name, b.slug, COUNT(p.id) as product_count
+                      FROM brands b
+                      INNER JOIN products p ON b.id = p.brand_id
+                      WHERE b.name LIKE ? AND p.is_active = 1
+                      GROUP BY b.id, b.name, b.slug
+                      ORDER BY product_count DESC
+                      LIMIT 3";
+
+        $brandsStmt = $db->prepare($brandsSql);
+        $brandsStmt->execute([$searchTerm]);
+        $brands = $brandsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Get matching categories (top 3)
+        $categoriesSql = "SELECT c.id, c.name, c.slug, COUNT(p.id) as product_count
+                          FROM categories c
+                          INNER JOIN products p ON c.id = p.category_id
+                          WHERE c.name LIKE ? AND c.is_active = 1 AND p.is_active = 1
+                          GROUP BY c.id, c.name, c.slug
+                          ORDER BY product_count DESC
+                          LIMIT 3";
+
+        $categoriesStmt = $db->prepare($categoriesSql);
+        $categoriesStmt->execute([$searchTerm]);
+        $categories = $categoriesStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Get popular searches (top 5)
+        $popularSql = "SELECT search_term, search_count, is_trending
+                       FROM popular_searches
+                       WHERE search_term LIKE ?
+                       ORDER BY search_count DESC, is_trending DESC
+                       LIMIT 5";
+
+        $popularStmt = $db->prepare($popularSql);
+        $popularStmt->execute([$searchTerm]);
+        $popularSearches = $popularStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Get trending searches (top 3)
+        $trendingSql = "SELECT search_term, search_count
+                        FROM popular_searches
+                        WHERE is_trending = 1
+                        ORDER BY search_count DESC, last_searched_at DESC
+                        LIMIT 3";
+
+        $trendingStmt = $db->prepare($trendingSql);
+        $trendingStmt->execute();
+        $trendingSearches = $trendingStmt->fetchAll(PDO::FETCH_ASSOC);
 
         $this->json([
             'success' => true,
+            'query' => $query,
             'results' => [
                 'products' => $products,
-                'brands' => $brands
-            ]
+                'brands' => $brands,
+                'categories' => $categories,
+                'popular' => $popularSearches,
+                'trending' => $trendingSearches
+            ],
+            'total_results' => count($products) + count($brands) + count($categories)
         ]);
     }
 

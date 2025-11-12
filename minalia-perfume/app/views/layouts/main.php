@@ -22,6 +22,18 @@
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="<?= BASE_URL ?>/images/favicon.ico">
 
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#7A8B5C">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MINALIA">
+    <link rel="manifest" href="<?= BASE_URL ?>/manifest.json">
+    <link rel="apple-touch-icon" href="<?= BASE_URL ?>/images/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="<?= BASE_URL ?>/images/icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?= BASE_URL ?>/images/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="<?= BASE_URL ?>/images/icons/icon-192x192.png">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -67,6 +79,55 @@
             <script src="<?= BASE_URL ?>/js/<?= $js ?>"></script>
         <?php endforeach; ?>
     <?php endif; ?>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('✅ PWA: Service Worker registered', registration.scope);
+
+                        // Check for updates
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New version available
+                                    if (confirm('🔄 Yeni bir sürüm mevcut! Güncellemek ister misiniz?')) {
+                                        newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                        window.location.reload();
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch((error) => {
+                        console.error('❌ PWA: Service Worker registration failed', error);
+                    });
+
+                // Reload page when new service worker takes over
+                let refreshing = false;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (!refreshing) {
+                        refreshing = true;
+                        window.location.reload();
+                    }
+                });
+            });
+
+            // Request push notification permission on first visit
+            if (Notification.permission === 'default') {
+                setTimeout(() => {
+                    if (confirm('📢 MINALIA\'dan bildirim almak ister misiniz?\n(Özel indirimler, sipariş güncellemeleri)')) {
+                        Notification.requestPermission().then((permission) => {
+                            console.log('Notification permission:', permission);
+                        });
+                    }
+                }, 5000); // 5 seconds after page load
+            }
+        }
+    </script>
 
 </body>
 </html>

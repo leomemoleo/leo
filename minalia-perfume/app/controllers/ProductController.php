@@ -14,30 +14,164 @@ class ProductController extends BaseController {
     }
 
     /**
-     * Product listing page
+     * Product listing page with faceted search
      */
     public function index() {
         $page = max(1, (int)$this->get('page', 1));
 
-        // Get filters from request
+        // Get comprehensive filters from request
         $filters = [
             'category_id' => $this->get('category'),
             'brand_id' => $this->get('brand'),
             'gender' => $this->get('gender'),
             'min_price' => $this->get('min_price'),
             'max_price' => $this->get('max_price'),
-            'order_by' => $this->get('sort', 'created_at DESC')
+            'min_rating' => $this->get('min_rating'),
+            'launch_year' => $this->get('year'),
+            'is_featured' => $this->get('featured'),
+            'is_bestseller' => $this->get('bestseller'),
+            'is_new' => $this->get('new'),
+            'in_stock' => $this->get('in_stock', true), // Default: show only in-stock
+            'notes' => $this->get('notes', []), // Fragrance notes filter
+            'order_by' => $this->getSortOption($this->get('sort', 'newest'))
         ];
 
-        // Get products
-        $result = $this->productModel->getProducts($filters, $page);
+        // Remove empty filters
+        $filters = array_filter($filters, function($value) {
+            return $value !== null && $value !== '' && $value !== [];
+        });
+
+        // Get products with faceted data
+        $result = $this->productModel->getProductsWithFacets($filters, $page);
+
+        // Get filter options for sidebar
+        $filterOptions = $this->getFilterOptions($filters);
+
+        // Track filter analytics
+        $this->trackFilterUsage($filters, count($result['data']));
 
         $this->view('products/index', [
             'title' => 'Tüm Ürünler',
             'products' => $result['data'],
             'pagination' => $result['pagination'],
-            'filters' => $filters
+            'filters' => $filters,
+            'filter_options' => $filterOptions,
+            'facets' => $result['facets'] ?? [],
+            'result_count' => $result['total'] ?? 0
         ]);
+    }
+
+    /**
+     * Get sort option from user-friendly key
+     */
+    private function getSortOption($sort) {
+        $sortMap = [
+            'newest' => 'created_at DESC',
+            'oldest' => 'created_at ASC',
+            'price_low' => 'price ASC',
+            'price_high' => 'price DESC',
+            'popular' => 'view_count DESC',
+            'rating' => 'rating DESC, review_count DESC',
+            'name_az' => 'name ASC',
+            'name_za' => 'name DESC'
+        ];
+
+        return $sortMap[$sort] ?? 'created_at DESC';
+    }
+
+    /**
+     * Get available filter options (brands, categories, etc.)
+     */
+    private function getFilterOptions($currentFilters = []) {
+        $db = $this->productModel->db;
+
+        // Get active brands with product count
+        $brandsSql = "SELECT b.id, b.name, b.slug, COUNT(p.id) as product_count
+                      FROM brands b
+                      INNER JOIN products p ON b.id = p.brand_id
+                      WHERE p.is_active = 1
+                      GROUP BY b.id, b.name, b.slug
+                      HAVING product_count > 0
+                      ORDER BY b.name ASC";
+        $brandsStmt = $db->prepare($brandsSql);
+        $brandsStmt->execute();
+        $brands = $brandsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Get active categories with product count
+        $categoriesSql = "SELECT c.id, c.name, c.slug, c.parent_id, COUNT(p.id) as product_count
+                          FROM categories c
+                          INNER JOIN products p ON c.id = p.category_id
+                          WHERE c.is_active = 1 AND p.is_active = 1
+                          GROUP BY c.id, c.name, c.slug, c.parent_id
+                          HAVING product_count > 0
+                          ORDER BY c.sort_order ASC, c.name ASC";
+        $categoriesStmt = $db->prepare($categoriesSql);
+        $categoriesStmt->execute();
+        $categories = $categoriesStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Get price range
+        $priceSql = "SELECT MIN(price) as min_price, MAX(price) as max_price
+                     FROM products WHERE is_active = 1";
+        $priceStmt = $db->prepare($priceSql);
+        $priceStmt->execute();
+        $priceRange = $priceStmt->fetch(PDO::FETCH_ASSOC);
+
+        // Get available years
+        $yearsSql = "SELECT DISTINCT launch_year
+                     FROM products
+                     WHERE is_active = 1 AND launch_year IS NOT NULL
+                     ORDER BY launch_year DESC";
+        $yearsStmt = $db->prepare($yearsSql);
+        $yearsStmt->execute();
+        $years = $yearsStmt->fetchAll(PDO::FETCH_COLUMN);
+
+        // Common fragrance notes (top 20)
+        $notes = ['Bergamot', 'Lavanta', 'Gül', 'Vanilya', 'Amber', 'Misk', 'Sandal Ağacı',
+                  'Yasemin', 'Portakal Çiçeği', 'Paçuli', 'Oud', 'Vetiver', 'Tonka', 'İris',
+                  'Karanfil', 'Tarçın', 'Kakao', 'Kahve', 'Deri', 'Tütün'];
+
+        return [
+            'brands' => $brands,
+            'categories' => $categories,
+            'price_range' => $priceRange,
+            'years' => $years,
+            'notes' => $notes,
+            'genders' => [
+                ['value' => 'men', 'label' => 'Erkek'],
+                ['value' => 'women', 'label' => 'Kadın'],
+                ['value' => 'unisex', 'label' => 'Unisex']
+            ]
+        ];
+    }
+
+    /**
+     * Track filter usage for analytics
+     */
+    private function trackFilterUsage($filters, $resultCount) {
+        if (empty($filters)) return;
+
+        try {
+            $db = $this->productModel->db;
+
+            // Remove order_by and page from filter tracking
+            $trackFilters = $filters;
+            unset($trackFilters['order_by'], $trackFilters['page']);
+
+            $filterJson = json_encode($trackFilters);
+
+            $sql = "INSERT INTO filter_analytics (filter_combination, usage_count, avg_result_count, last_used_at)
+                    VALUES (?, 1, ?, NOW())
+                    ON DUPLICATE KEY UPDATE
+                        usage_count = usage_count + 1,
+                        avg_result_count = ((avg_result_count * usage_count) + ?) / (usage_count + 1),
+                        last_used_at = NOW()";
+
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$filterJson, $resultCount, $resultCount]);
+
+        } catch (Exception $e) {
+            error_log("Filter analytics tracking error: " . $e->getMessage());
+        }
     }
 
     /**
@@ -123,28 +257,110 @@ class ProductController extends BaseController {
     }
 
     /**
-     * Search products
+     * Search products with enhanced features
      */
     public function search() {
-        $query = $this->get('q', '');
+        $query = trim($this->get('q', ''));
         $page = max(1, (int)$this->get('page', 1));
 
         if (empty($query)) {
             $this->redirect(BASE_URL . '/products');
+            return;
         }
 
+        // Get all filters including search
         $filters = [
             'search' => $query,
-            'order_by' => $this->get('sort', 'created_at DESC')
+            'category_id' => $this->get('category'),
+            'brand_id' => $this->get('brand'),
+            'gender' => $this->get('gender'),
+            'min_price' => $this->get('min_price'),
+            'max_price' => $this->get('max_price'),
+            'min_rating' => $this->get('min_rating'),
+            'in_stock' => $this->get('in_stock', true),
+            'order_by' => $this->getSortOption($this->get('sort', 'relevance'))
         ];
 
-        $result = $this->productModel->getProducts($filters, $page);
+        // Remove empty filters
+        $filters = array_filter($filters, function($value) {
+            return $value !== null && $value !== '';
+        });
+
+        // Get search results with facets
+        $result = $this->productModel->searchProducts($query, $filters, $page);
+
+        // Get filter options
+        $filterOptions = $this->getFilterOptions($filters);
+
+        // Track search
+        $this->trackSearch($query, count($result['data']), $filters);
+
+        // Update popular searches
+        $this->updatePopularSearch($query);
 
         $this->view('products/index', [
             'title' => 'Arama: ' . $query,
             'products' => $result['data'],
             'pagination' => $result['pagination'],
-            'search_query' => $query
+            'filters' => $filters,
+            'filter_options' => $filterOptions,
+            'search_query' => $query,
+            'result_count' => $result['total'] ?? 0,
+            'suggestions' => $result['suggestions'] ?? []
         ]);
+    }
+
+    /**
+     * Track search for analytics
+     */
+    private function trackSearch($query, $resultCount, $filters) {
+        if (empty($query)) return;
+
+        try {
+            $db = $this->productModel->db;
+            $userId = getCurrentUserId();
+            $sessionId = session_id();
+
+            $filterJson = json_encode($filters);
+
+            $sql = "INSERT INTO search_history (user_id, session_id, search_term, result_count, filters_used, created_at)
+                    VALUES (?, ?, ?, ?, ?, NOW())";
+
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$userId, $sessionId, $query, $resultCount, $filterJson]);
+
+        } catch (Exception $e) {
+            error_log("Search tracking error: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update popular searches
+     */
+    private function updatePopularSearch($query) {
+        if (empty($query) || strlen($query) < 3) return;
+
+        try {
+            $db = $this->productModel->db;
+
+            $sql = "INSERT INTO popular_searches (search_term, search_count, last_searched_at)
+                    VALUES (?, 1, NOW())
+                    ON DUPLICATE KEY UPDATE
+                        search_count = search_count + 1,
+                        last_searched_at = NOW()";
+
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$query]);
+
+            // Mark as trending if search_count > 100
+            $trendingSql = "UPDATE popular_searches
+                            SET is_trending = 1
+                            WHERE search_count > 100 AND search_term = ?";
+            $trendingStmt = $db->prepare($trendingSql);
+            $trendingStmt->execute([$query]);
+
+        } catch (Exception $e) {
+            error_log("Popular search update error: " . $e->getMessage());
+        }
     }
 }

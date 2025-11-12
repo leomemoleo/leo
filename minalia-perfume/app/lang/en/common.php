@@ -1,0 +1,128 @@
+<?php
+/**
+ * English - Common Translations
+ */
+
+return [
+    // General
+    'welcome' => 'Welcome',
+    'home' => 'Home',
+    'about' => 'About Us',
+    'contact' => 'Contact',
+    'search' => 'Search',
+    'view_all' => 'View All',
+    'read_more' => 'Read More',
+    'show_more' => 'Show More',
+    'show_less' => 'Show Less',
+    'close' => 'Close',
+    'cancel' => 'Cancel',
+    'save' => 'Save',
+    'delete' => 'Delete',
+    'edit' => 'Edit',
+    'update' => 'Update',
+    'create' => 'Create',
+    'submit' => 'Submit',
+    'confirm' => 'Confirm',
+    'back' => 'Back',
+    'next' => 'Next',
+    'previous' => 'Previous',
+    'loading' => 'Loading...',
+    'please_wait' => 'Please Wait...',
+    'yes' => 'Yes',
+    'no' => 'No',
+
+    // Navigation
+    'menu' => 'Menu',
+    'products' => 'Products',
+    'categories' => 'Categories',
+    'brands' => 'Brands',
+    'new_arrivals' => 'New Arrivals',
+    'best_sellers' => 'Best Sellers',
+    'on_sale' => 'On Sale',
+    'my_account' => 'My Account',
+    'login' => 'Login',
+    'register' => 'Register',
+    'logout' => 'Logout',
+
+    // E-commerce
+    'add_to_cart' => 'Add to Cart',
+    'add_to_wishlist' => 'Add to Wishlist',
+    'buy_now' => 'Buy Now',
+    'cart' => 'Cart',
+    'wishlist' => 'Wishlist',
+    'checkout' => 'Checkout',
+    'price' => 'Price',
+    'quantity' => 'Quantity',
+    'subtotal' => 'Subtotal',
+    'total' => 'Total',
+    'discount' => 'Discount',
+    'shipping' => 'Shipping',
+    'tax' => 'Tax',
+    'free_shipping' => 'Free Shipping',
+    'in_stock' => 'In Stock',
+    'out_of_stock' => 'Out of Stock',
+    'product_details' => 'Product Details',
+    'specifications' => 'Specifications',
+    'reviews' => 'Reviews',
+    'rating' => 'Rating',
+
+    // Forms
+    'name' => 'Name',
+    'surname' => 'Surname',
+    'email' => 'Email',
+    'password' => 'Password',
+    'password_confirm' => 'Confirm Password',
+    'phone' => 'Phone',
+    'address' => 'Address',
+    'city' => 'City',
+    'state' => 'State',
+    'country' => 'Country',
+    'postal_code' => 'Postal Code',
+    'message' => 'Message',
+    'subject' => 'Subject',
+
+    // Messages
+    'success' => 'Success!',
+    'error' => 'Error!',
+    'warning' => 'Warning!',
+    'info' => 'Info',
+    'added_to_cart' => 'Product added to cart',
+    'added_to_wishlist' => 'Product added to wishlist',
+    'removed_from_cart' => 'Product removed from cart',
+    'removed_from_wishlist' => 'Product removed from wishlist',
+    'cart_updated' => 'Cart updated',
+    'thank_you' => 'Thank You!',
+    'order_received' => 'Your order has been received',
+
+    // Time
+    'today' => 'Today',
+    'yesterday' => 'Yesterday',
+    'tomorrow' => 'Tomorrow',
+    'this_week' => 'This Week',
+    'this_month' => 'This Month',
+    'this_year' => 'This Year',
+
+    // Units
+    'ml' => 'ml',
+    'piece' => 'piece',
+    'box' => 'box',
+
+    // Footer
+    'all_rights_reserved' => 'All rights reserved',
+    'privacy_policy' => 'Privacy Policy',
+    'terms_conditions' => 'Terms & Conditions',
+    'return_policy' => 'Return Policy',
+    'newsletter' => 'Newsletter',
+    'subscribe' => 'Subscribe',
+    'follow_us' => 'Follow Us',
+    'social_media' => 'Social Media',
+
+    // Perfume specific
+    'fragrance_family' => 'Fragrance Family',
+    'top_notes' => 'Top Notes',
+    'middle_notes' => 'Middle Notes',
+    'base_notes' => 'Base Notes',
+    'for_men' => 'For Men',
+    'for_women' => 'For Women',
+    'unisex' => 'Unisex',
+];

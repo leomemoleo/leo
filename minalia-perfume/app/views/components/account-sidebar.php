@@ -10,12 +10,22 @@
             <span>Siparişlerim</span>
         </a>
 
+        <a href="<?= BASE_URL ?>/account/returns" class="sidebar-item <?= $active_menu === 'returns' ? 'active' : '' ?>">
+            <i class="fas fa-undo-alt"></i>
+            <span>İadelerim</span>
+        </a>
+
         <a href="<?= BASE_URL ?>/account/addresses" class="sidebar-item <?= $active_menu === 'addresses' ? 'active' : '' ?>">
             <i class="fas fa-map-marker-alt"></i>
             <span>Adreslerim</span>
         </a>
 
-        <a href="<?= BASE_URL ?>/account/wishlist" class="sidebar-item <?= $active_menu === 'wishlist' ? 'active' : '' ?>">
+        <a href="<?= BASE_URL ?>/account/payment-methods" class="sidebar-item <?= $active_menu === 'payment-methods' ? 'active' : '' ?>">
+            <i class="fas fa-credit-card"></i>
+            <span>Ödeme Yöntemlerim</span>
+        </a>
+
+        <a href="<?= BASE_URL ?>/wishlist" class="sidebar-item <?= $active_menu === 'wishlist' ? 'active' : '' ?>">
             <i class="fas fa-heart"></i>
             <span>Favorilerim</span>
         </a>
@@ -23,6 +33,31 @@
         <a href="<?= BASE_URL ?>/account/loyalty" class="sidebar-item <?= $active_menu === 'loyalty' ? 'active' : '' ?>">
             <i class="fas fa-star"></i>
             <span>Sadakat Puanları</span>
+        </a>
+
+        <a href="<?= BASE_URL ?>/account/coupons" class="sidebar-item <?= $active_menu === 'coupons' ? 'active' : '' ?>">
+            <i class="fas fa-ticket-alt"></i>
+            <span>Kuponlarım</span>
+        </a>
+
+        <a href="<?= BASE_URL ?>/account/notifications" class="sidebar-item <?= $active_menu === 'notifications' ? 'active' : '' ?>">
+            <i class="fas fa-bell"></i>
+            <span>Bildirimlerim</span>
+        </a>
+
+        <a href="<?= BASE_URL ?>/account/reviews" class="sidebar-item <?= $active_menu === 'reviews' ? 'active' : '' ?>">
+            <i class="fas fa-comment-alt"></i>
+            <span>Ürün Yorumlarım</span>
+        </a>
+
+        <a href="<?= BASE_URL ?>/account/preferences" class="sidebar-item <?= $active_menu === 'preferences' ? 'active' : '' ?>">
+            <i class="fas fa-sliders-h"></i>
+            <span>Tercihlerim</span>
+        </a>
+
+        <a href="<?= BASE_URL ?>/account/security" class="sidebar-item <?= $active_menu === 'security' ? 'active' : '' ?>">
+            <i class="fas fa-shield-alt"></i>
+            <span>Hesap Güvenliği</span>
         </a>
 
         <a href="<?= BASE_URL ?>/account/profile" class="sidebar-item <?= $active_menu === 'profile' ? 'active' : '' ?>">

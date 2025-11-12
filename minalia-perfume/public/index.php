@@ -68,19 +68,48 @@ $router->post('/forgot-password', 'AuthController@forgotPassword', 'auth.forgot.
 $router->get('/reset-password/{token}', 'AuthController@resetPasswordForm', 'auth.reset');
 $router->post('/reset-password', 'AuthController@resetPassword', 'auth.reset.post');
 
+// Social Login (OAuth)
+$router->get('/auth/google', 'OAuthController@googleLogin', 'oauth.google');
+$router->get('/auth/google/callback', 'OAuthController@googleCallback', 'oauth.google.callback');
+$router->get('/auth/facebook', 'OAuthController@facebookLogin', 'oauth.facebook');
+$router->get('/auth/facebook/callback', 'OAuthController@facebookCallback', 'oauth.facebook.callback');
+$router->post('/auth/disconnect', 'OAuthController@disconnect', 'oauth.disconnect');
+
 // User Account
 $router->group('/account', function($router) {
-    $router->get('/', 'AccountController@dashboard', 'account.dashboard');
+    $router->get('/', 'AccountController@index', 'account.dashboard');
     $router->get('/profile', 'AccountController@profile', 'account.profile');
     $router->post('/profile', 'AccountController@updateProfile', 'account.profile.update');
     $router->get('/orders', 'AccountController@orders', 'account.orders');
     $router->get('/orders/{orderNumber}', 'AccountController@orderDetail', 'account.order.detail');
+    $router->post('/orders/reorder/{orderId}', 'AccountController@reorder', 'account.orders.reorder');
     $router->get('/addresses', 'AccountController@addresses', 'account.addresses');
     $router->post('/addresses/add', 'AccountController@addAddress', 'account.addresses.add');
     $router->post('/addresses/update/{id}', 'AccountController@updateAddress', 'account.addresses.update');
     $router->post('/addresses/delete/{id}', 'AccountController@deleteAddress', 'account.addresses.delete');
-    $router->get('/password', 'AccountController@password', 'account.password');
-    $router->post('/password', 'AccountController@changePassword', 'account.password.change');
+    $router->post('/addresses/set-default/{id}', 'AccountController@setDefaultAddress', 'account.addresses.default');
+    $router->post('/change-password', 'AccountController@changePassword', 'account.password.change');
+    $router->get('/loyalty', 'AccountController@loyalty', 'account.loyalty');
+    $router->get('/payment-methods', 'AccountController@paymentMethods', 'account.payment.methods');
+    $router->post('/payment-methods/add', 'AccountController@addPaymentMethod', 'account.payment.add');
+    $router->post('/payment-methods/delete/{id}', 'AccountController@deletePaymentMethod', 'account.payment.delete');
+    $router->post('/payment-methods/set-default/{id}', 'AccountController@setDefaultPaymentMethod', 'account.payment.default');
+    $router->get('/returns', 'AccountController@returns', 'account.returns');
+    $router->get('/returns/{id}', 'AccountController@returnDetail', 'account.returns.detail');
+    $router->any('/returns/create/{orderId}', 'AccountController@createReturn', 'account.returns.create');
+    $router->post('/returns/cancel/{id}', 'AccountController@cancelReturn', 'account.returns.cancel');
+    $router->get('/notifications', 'AccountController@notifications', 'account.notifications');
+    $router->post('/notifications/mark/{id}', 'AccountController@markNotificationRead', 'account.notifications.mark');
+    $router->post('/notifications/delete/{id}', 'AccountController@deleteNotification', 'account.notifications.delete');
+    $router->any('/notifications/preferences', 'AccountController@notificationPreferences', 'account.notifications.preferences');
+    $router->get('/reviews', 'AccountController@reviews', 'account.reviews');
+    $router->post('/reviews/delete/{id}', 'AccountController@deleteReview', 'account.reviews.delete');
+    $router->any('/preferences', 'AccountController@preferences', 'account.preferences');
+    $router->get('/security', 'AccountController@security', 'account.security');
+    $router->post('/security/kvkk', 'AccountController@updateKVKKConsent', 'account.security.kvkk');
+    $router->post('/security/delete-account', 'AccountController@requestAccountDeletion', 'account.security.delete');
+    $router->get('/data/download', 'AccountController@downloadMyData', 'account.data.download');
+    $router->get('/coupons', 'AccountController@coupons', 'account.coupons');
 });
 
 // Reviews
@@ -104,7 +133,11 @@ $router->group('/api', function($router) {
     $router->post('/cart/count', 'Api\CartApiController@count');
     $router->post('/wishlist/count', 'Api\WishlistApiController@count');
     $router->get('/products/featured', 'Api\ProductApiController@featured');
-    $router->get('/products/search-suggestions', 'Api\ProductApiController@searchSuggestions');
+    $router->get('/products/filter', 'ApiController@filterProducts');
+    $router->get('/search/autocomplete', 'ApiController@searchSuggestions');
+    $router->get('/search/suggestions', 'ApiController@searchSuggestions');
+    $router->post('/coupon/validate', 'ApiController@validateCoupon');
+    $router->get('/recommendations', 'ApiController@aiRecommendations');
 });
 
 // Dispatch the request
