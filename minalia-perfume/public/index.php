@@ -77,7 +77,7 @@ $router->post('/auth/disconnect', 'OAuthController@disconnect', 'oauth.disconnec
 
 // User Account
 $router->group('/account', function($router) {
-    $router->get('/', 'AccountController@dashboard', 'account.dashboard');
+    $router->get('/', 'AccountController@index', 'account.dashboard');
     $router->get('/profile', 'AccountController@profile', 'account.profile');
     $router->post('/profile', 'AccountController@updateProfile', 'account.profile.update');
     $router->get('/orders', 'AccountController@orders', 'account.orders');
@@ -86,8 +86,9 @@ $router->group('/account', function($router) {
     $router->post('/addresses/add', 'AccountController@addAddress', 'account.addresses.add');
     $router->post('/addresses/update/{id}', 'AccountController@updateAddress', 'account.addresses.update');
     $router->post('/addresses/delete/{id}', 'AccountController@deleteAddress', 'account.addresses.delete');
-    $router->get('/password', 'AccountController@password', 'account.password');
-    $router->post('/password', 'AccountController@changePassword', 'account.password.change');
+    $router->post('/addresses/set-default/{id}', 'AccountController@setDefaultAddress', 'account.addresses.default');
+    $router->post('/change-password', 'AccountController@changePassword', 'account.password.change');
+    $router->get('/loyalty', 'AccountController@loyalty', 'account.loyalty');
 });
 
 // Reviews
