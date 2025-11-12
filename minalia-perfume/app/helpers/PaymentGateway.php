@@ -94,7 +94,7 @@ class IyzicoAdapter implements PaymentGatewayInterface {
         ];
     }
 
-    public function verify Payment($paymentId) {
+    public function verifyPayment($paymentId) {
         // iyzico otomatik olarak doğrulama yapar
         return true;
     }

@@ -104,16 +104,22 @@ class InstallController {
         $dbUser = $_POST['db_user'] ?? 'root';
         $dbPass = $_POST['db_pass'] ?? '';
 
+        // Validate database name (security: prevent SQL injection)
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $dbName)) {
+            $this->errors[] = 'Invalid database name. Only letters, numbers and underscores allowed.';
+            return;
+        }
+
         // Test database connection
         try {
             $dsn = "mysql:host={$dbHost};charset=utf8mb4";
             $pdo = new PDO($dsn, $dbUser, $dbPass);
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-            // Create database if not exists
+            // Create database if not exists (safe: validated above)
             $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$dbName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
 
-            // Test connection to the database
+            // Test connection to the database (safe: validated above)
             $pdo->exec("USE `{$dbName}`");
 
             // Save to session
