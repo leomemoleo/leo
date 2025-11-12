@@ -103,6 +103,8 @@ $router->group('/account', function($router) {
     $router->any('/notifications/preferences', 'AccountController@notificationPreferences', 'account.notifications.preferences');
     $router->get('/reviews', 'AccountController@reviews', 'account.reviews');
     $router->post('/reviews/delete/{id}', 'AccountController@deleteReview', 'account.reviews.delete');
+    $router->any('/preferences', 'AccountController@preferences', 'account.preferences');
+    $router->get('/security', 'AccountController@security', 'account.security');
 });
 
 // Reviews

@@ -45,6 +45,16 @@
             <span>Ürün Yorumlarım</span>
         </a>
 
+        <a href="<?= BASE_URL ?>/account/preferences" class="sidebar-item <?= $active_menu === 'preferences' ? 'active' : '' ?>">
+            <i class="fas fa-sliders-h"></i>
+            <span>Tercihlerim</span>
+        </a>
+
+        <a href="<?= BASE_URL ?>/account/security" class="sidebar-item <?= $active_menu === 'security' ? 'active' : '' ?>">
+            <i class="fas fa-shield-alt"></i>
+            <span>Hesap Güvenliği</span>
+        </a>
+
         <a href="<?= BASE_URL ?>/account/profile" class="sidebar-item <?= $active_menu === 'profile' ? 'active' : '' ?>">
             <i class="fas fa-user"></i>
             <span>Profil Bilgilerim</span>

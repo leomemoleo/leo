@@ -1318,4 +1318,110 @@ class AccountController extends BaseController {
 
         redirect('/account/reviews');
     }
+
+    /**
+     * User preferences
+     */
+    public function preferences() {
+        $userId = getCurrentUserId();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // CSRF validation
+            if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
+                setFlashMessage('Güvenlik hatası.', 'error');
+                redirect('/account/preferences');
+                return;
+            }
+
+            $preferredNotes = isset($_POST['preferred_notes']) ? array_filter($_POST['preferred_notes']) : [];
+            $preferredBrands = isset($_POST['preferred_brands']) ? array_filter($_POST['preferred_brands']) : [];
+            $budgetRange = sanitize($_POST['budget_range'] ?? '');
+            $occasionType = sanitize($_POST['occasion_type'] ?? '');
+
+            try {
+                // Check if preferences exist
+                $checkSql = "SELECT id FROM user_preferences WHERE user_id = ?";
+                $checkStmt = $this->db->prepare($checkSql);
+                $checkStmt->execute([$userId]);
+                $exists = $checkStmt->fetch();
+
+                if ($exists) {
+                    $sql = "UPDATE user_preferences SET preferred_notes = ?, preferred_brands = ?,
+                            budget_range = ?, occasion_type = ?, updated_at = NOW() WHERE user_id = ?";
+                    $stmt = $this->db->prepare($sql);
+                    $stmt->execute([
+                        json_encode($preferredNotes),
+                        json_encode($preferredBrands),
+                        $budgetRange,
+                        $occasionType,
+                        $userId
+                    ]);
+                } else {
+                    $sql = "INSERT INTO user_preferences (user_id, preferred_notes, preferred_brands,
+                            budget_range, occasion_type, updated_at) VALUES (?, ?, ?, ?, ?, NOW())";
+                    $stmt = $this->db->prepare($sql);
+                    $stmt->execute([
+                        $userId,
+                        json_encode($preferredNotes),
+                        json_encode($preferredBrands),
+                        $budgetRange,
+                        $occasionType
+                    ]);
+                }
+
+                setFlashMessage('Tercihleriniz başarıyla güncellendi.', 'success');
+            } catch (Exception $e) {
+                error_log("Update preferences error: " . $e->getMessage());
+                setFlashMessage('Tercihler güncellenirken bir hata oluştu.', 'error');
+            }
+
+            redirect('/account/preferences');
+            return;
+        }
+
+        // Get preferences
+        $sql = "SELECT * FROM user_preferences WHERE user_id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$userId]);
+        $preferences = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($preferences) {
+            $preferences['preferred_notes'] = json_decode($preferences['preferred_notes'], true) ?: [];
+            $preferences['preferred_brands'] = json_decode($preferences['preferred_brands'], true) ?: [];
+        }
+
+        // Get available brands
+        $brandsSql = "SELECT id, name FROM brands ORDER BY name";
+        $brandsStmt = $this->db->prepare($brandsSql);
+        $brandsStmt->execute();
+        $brands = $brandsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->view('account/preferences', [
+            'title' => 'Tercihlerim',
+            'preferences' => $preferences,
+            'brands' => $brands
+        ]);
+    }
+
+    /**
+     * Account security page
+     */
+    public function security() {
+        $userId = getCurrentUserId();
+
+        // Get user info
+        $user = $this->userModel->find($userId);
+
+        // Get social accounts
+        $socialSql = "SELECT * FROM social_accounts WHERE user_id = ?";
+        $socialStmt = $this->db->prepare($socialSql);
+        $socialStmt->execute([$userId]);
+        $socialAccounts = $socialStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->view('account/security', [
+            'title' => 'Hesap Güvenliği',
+            'user' => $user,
+            'social_accounts' => $socialAccounts
+        ]);
+    }
 }
