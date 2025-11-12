@@ -6,13 +6,11 @@
 
 require_once __DIR__ . '/../../app/models/User.php';
 
-class AdminCustomerController {
-    private $db;
+class AdminCustomerController extends AdminController {
     private $userModel;
 
     public function __construct() {
-        requireAdminAuth();
-        $this->db = Database::getInstance()->getConnection();
+        parent::__construct();
         $this->userModel = new User();
     }
 
@@ -104,18 +102,5 @@ class AdminCustomerController {
         ];
 
         $this->render('pages/customers/view', $data);
-    }
-
-    /**
-     * Render view
-     */
-    private function render($view, $data = []) {
-        extract($data);
-
-        ob_start();
-        require ADMIN_VIEWS_PATH . '/' . $view . '.php';
-        $content = ob_get_clean();
-
-        require ADMIN_VIEWS_PATH . '/layouts/main.php';
     }
 }

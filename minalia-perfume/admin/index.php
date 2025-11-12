@@ -14,6 +14,9 @@ require_once __DIR__ . '/../app/helpers/functions.php';
 define('ADMIN_URL', BASE_URL . '/admin');
 define('ADMIN_VIEWS_PATH', __DIR__ . '/views');
 
+// Load base controller
+require_once __DIR__ . '/controllers/AdminController.php';
+
 // Check if admin is logged in
 function requireAdminAuth() {
     if (!isset($_SESSION[SESSION_ADMIN_ID])) {
@@ -94,7 +97,16 @@ $routes = [
 
     // Settings
     'settings' => 'AdminSettingsController@index',
-    'settings/update' => 'AdminSettingsController@update',
+    'settings/update-general' => 'AdminSettingsController@updateGeneral',
+    'settings/update-email' => 'AdminSettingsController@updateEmail',
+    'settings/update-payment' => 'AdminSettingsController@updatePayment',
+    'settings/update-shipping' => 'AdminSettingsController@updateShipping',
+    'settings/update-seo' => 'AdminSettingsController@updateSeo',
+    'settings/update-social' => 'AdminSettingsController@updateSocial',
+    'settings/update-analytics' => 'AdminSettingsController@updateAnalytics',
+    'settings/update-advanced' => 'AdminSettingsController@updateAdvanced',
+    'settings/test-email' => 'AdminSettingsController@testEmail',
+    'settings/clear-cache' => 'AdminSettingsController@clearCache',
 
     // Reports
     'reports' => 'AdminReportController@index',
