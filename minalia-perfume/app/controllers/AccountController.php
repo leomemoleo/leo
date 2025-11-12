@@ -342,26 +342,41 @@ class AccountController extends BaseController {
 
         if (empty($phone)) {
             $errors[] = 'Telefon numarası zorunludur.';
-        } elseif (!preg_match('/^[0-9\s\-\+\(\)]{10,20}$/', $phone)) {
-            $errors[] = 'Geçerli bir telefon numarası giriniz.';
+        } else {
+            // Clean phone number for validation
+            $cleanPhone = preg_replace('/[\s\-\(\)]/', '', $phone);
+
+            // Turkish phone format: 0xxx xxx xx xx (11 digits starting with 0)
+            // Or international: +90xxx xxx xx xx (13 digits starting with +90)
+            if (!preg_match('/^(0[0-9]{10}|\\+90[0-9]{10})$/', $cleanPhone)) {
+                $errors[] = 'Geçerli bir telefon numarası giriniz (örn: 0532 123 45 67 veya +90 532 123 45 67).';
+            }
         }
 
         if (empty($addressLine1)) {
             $errors[] = 'Adres satırı zorunludur.';
+        } elseif (strlen($addressLine1) < 10) {
+            $errors[] = 'Adres en az 10 karakter olmalıdır.';
         }
 
         if (empty($district)) {
             $errors[] = 'İlçe zorunludur.';
+        } elseif (strlen($district) < 2) {
+            $errors[] = 'Geçerli bir ilçe adı giriniz.';
         }
 
         if (empty($city)) {
             $errors[] = 'İl zorunludur.';
+        } elseif (strlen($city) < 2) {
+            $errors[] = 'Geçerli bir il adı giriniz.';
         }
 
         if (empty($postalCode)) {
             $errors[] = 'Posta kodu zorunludur.';
         } elseif (!preg_match('/^[0-9]{5}$/', $postalCode)) {
-            $errors[] = 'Posta kodu 5 haneli olmalıdır.';
+            $errors[] = 'Posta kodu 5 haneli sayı olmalıdır (örn: 34000).';
+        } elseif (intval($postalCode) < 1000 || intval($postalCode) > 81999) {
+            $errors[] = 'Geçerli bir Türkiye posta kodu giriniz (01000-81999).';
         }
 
         if (!in_array($addressType, ['billing', 'shipping', 'both'])) {
@@ -463,22 +478,45 @@ class AccountController extends BaseController {
 
         if (empty($phone)) {
             $errors[] = 'Telefon numarası zorunludur.';
+        } else {
+            // Clean phone number for validation
+            $cleanPhone = preg_replace('/[\s\-\(\)]/', '', $phone);
+
+            // Turkish phone format: 0xxx xxx xx xx (11 digits starting with 0)
+            // Or international: +90xxx xxx xx xx (13 digits starting with +90)
+            if (!preg_match('/^(0[0-9]{10}|\\+90[0-9]{10})$/', $cleanPhone)) {
+                $errors[] = 'Geçerli bir telefon numarası giriniz (örn: 0532 123 45 67 veya +90 532 123 45 67).';
+            }
         }
 
         if (empty($addressLine1)) {
             $errors[] = 'Adres satırı zorunludur.';
+        } elseif (strlen($addressLine1) < 10) {
+            $errors[] = 'Adres en az 10 karakter olmalıdır.';
         }
 
         if (empty($district)) {
             $errors[] = 'İlçe zorunludur.';
+        } elseif (strlen($district) < 2) {
+            $errors[] = 'Geçerli bir ilçe adı giriniz.';
         }
 
         if (empty($city)) {
             $errors[] = 'İl zorunludur.';
+        } elseif (strlen($city) < 2) {
+            $errors[] = 'Geçerli bir il adı giriniz.';
         }
 
         if (empty($postalCode)) {
             $errors[] = 'Posta kodu zorunludur.';
+        } elseif (!preg_match('/^[0-9]{5}$/', $postalCode)) {
+            $errors[] = 'Posta kodu 5 haneli sayı olmalıdır (örn: 34000).';
+        } elseif (intval($postalCode) < 1000 || intval($postalCode) > 81999) {
+            $errors[] = 'Geçerli bir Türkiye posta kodu giriniz (01000-81999).';
+        }
+
+        if (!in_array($addressType, ['billing', 'shipping', 'both'])) {
+            $errors[] = 'Geçersiz adres tipi.';
         }
 
         if (!empty($errors)) {
