@@ -35,6 +35,11 @@
             <span>Sadakat Puanları</span>
         </a>
 
+        <a href="<?= BASE_URL ?>/account/coupons" class="sidebar-item <?= $active_menu === 'coupons' ? 'active' : '' ?>">
+            <i class="fas fa-ticket-alt"></i>
+            <span>Kuponlarım</span>
+        </a>
+
         <a href="<?= BASE_URL ?>/account/notifications" class="sidebar-item <?= $active_menu === 'notifications' ? 'active' : '' ?>">
             <i class="fas fa-bell"></i>
             <span>Bildirimlerim</span>

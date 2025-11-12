@@ -106,6 +106,7 @@ $router->group('/account', function($router) {
     $router->post('/reviews/delete/{id}', 'AccountController@deleteReview', 'account.reviews.delete');
     $router->any('/preferences', 'AccountController@preferences', 'account.preferences');
     $router->get('/security', 'AccountController@security', 'account.security');
+    $router->get('/coupons', 'AccountController@coupons', 'account.coupons');
 });
 
 // Reviews

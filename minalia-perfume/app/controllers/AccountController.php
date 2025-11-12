@@ -1572,4 +1572,71 @@ class AccountController extends BaseController {
             redirect('/account/orders/' . $orderId);
         }
     }
+
+    /**
+     * User coupons page
+     */
+    public function coupons() {
+        $userId = getCurrentUserId();
+
+        // Get user's coupons with coupon details
+        $sql = "SELECT uc.*, c.code, c.type, c.discount_value, c.minimum_order_amount,
+                c.maximum_discount_amount, c.valid_from, c.valid_until, c.title, c.description,
+                c.usage_limit_per_user, c.is_active
+                FROM user_coupons uc
+                INNER JOIN coupons c ON uc.coupon_id = c.id
+                WHERE uc.user_id = ?
+                ORDER BY
+                    CASE uc.status
+                        WHEN 'available' THEN 1
+                        WHEN 'expired' THEN 2
+                        WHEN 'used' THEN 3
+                    END,
+                    c.valid_until ASC";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$userId]);
+        $userCoupons = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Update expired coupons
+        foreach ($userCoupons as &$coupon) {
+            // Check if coupon has expired
+            $expiryDate = $coupon['custom_expiry_date'] ?? $coupon['valid_until'];
+
+            if ($coupon['status'] === 'available' && (strtotime($expiryDate) < time() || $coupon['is_active'] == 0)) {
+                // Mark as expired
+                $updateSql = "UPDATE user_coupons SET status = 'expired' WHERE id = ?";
+                $updateStmt = $this->db->prepare($updateSql);
+                $updateStmt->execute([$coupon['id']]);
+                $coupon['status'] = 'expired';
+            }
+
+            // Check if usage limit reached
+            if ($coupon['status'] === 'available' && $coupon['times_used'] >= $coupon['usage_limit_per_user']) {
+                $updateSql = "UPDATE user_coupons SET status = 'used' WHERE id = ?";
+                $updateStmt = $this->db->prepare($updateSql);
+                $updateStmt->execute([$coupon['id']]);
+                $coupon['status'] = 'used';
+            }
+        }
+
+        // Get usage history
+        $historySql = "SELECT cul.*, c.code, c.title, o.order_number, o.created_at
+                       FROM coupon_usage_log cul
+                       INNER JOIN coupons c ON cul.coupon_id = c.id
+                       INNER JOIN orders o ON cul.order_id = o.id
+                       WHERE cul.user_id = ?
+                       ORDER BY cul.used_at DESC
+                       LIMIT 10";
+
+        $historyStmt = $this->db->prepare($historySql);
+        $historyStmt->execute([$userId]);
+        $usageHistory = $historyStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->view('account/coupons', [
+            'title' => 'Kuponlarım',
+            'coupons' => $userCoupons,
+            'usage_history' => $usageHistory
+        ]);
+    }
 }
