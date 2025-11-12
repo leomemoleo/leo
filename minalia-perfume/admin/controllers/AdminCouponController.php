@@ -6,13 +6,11 @@
 
 require_once __DIR__ . '/../../app/models/Coupon.php';
 
-class AdminCouponController {
-    private $db;
+class AdminCouponController extends AdminController {
     private $couponModel;
 
     public function __construct() {
-        requireAdminAuth();
-        $this->db = Database::getInstance()->getConnection();
+        parent::__construct();
         $this->couponModel = new Coupon();
     }
 
@@ -150,18 +148,5 @@ class AdminCouponController {
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => 'Hata: ' . $e->getMessage()]);
         }
-    }
-
-    /**
-     * Render view
-     */
-    private function render($view, $data = []) {
-        extract($data);
-
-        ob_start();
-        require ADMIN_VIEWS_PATH . '/' . $view . '.php';
-        $content = ob_get_clean();
-
-        require ADMIN_VIEWS_PATH . '/layouts/main.php';
     }
 }

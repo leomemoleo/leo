@@ -6,13 +6,11 @@
 
 require_once __DIR__ . '/../../app/models/Product.php';
 
-class AdminProductController {
-    private $db;
+class AdminProductController extends AdminController {
     private $productModel;
 
     public function __construct() {
-        requireAdminAuth();
-        $this->db = Database::getInstance()->getConnection();
+        parent::__construct();
         $this->productModel = new Product();
     }
 
@@ -246,6 +244,30 @@ class AdminProductController {
     }
 
     /**
+     * AJAX Upload product image
+     */
+    public function uploadImage() {
+        try {
+            if (!isset($_FILES['image'])) {
+                echo json_encode(['success' => false, 'message' => 'Dosya bulunamadı.']);
+                return;
+            }
+
+            $productId = (int)($_POST['product_id'] ?? 0);
+            $imagePath = $this->uploadProductImage($productId, $_FILES['image']);
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Resim yüklendi.',
+                'path' => $imagePath
+            ]);
+
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Hata: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
      * Upload product image
      */
     private function uploadProductImage($productId, $file) {
@@ -289,35 +311,4 @@ class AdminProductController {
         return trim($slug, '-');
     }
 
-    /**
-     * Log activity
-     */
-    private function logActivity($action, $description) {
-        try {
-            $sql = "INSERT INTO activity_logs (admin_id, action, description, ip_address, created_at)
-                    VALUES (?, ?, ?, ?, NOW())";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([
-                $_SESSION[SESSION_ADMIN_ID],
-                $action,
-                $description,
-                $_SERVER['REMOTE_ADDR'] ?? 'unknown'
-            ]);
-        } catch (Exception $e) {
-            error_log("Failed to log activity: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * Render view
-     */
-    private function render($view, $data = []) {
-        extract($data);
-
-        ob_start();
-        require ADMIN_VIEWS_PATH . '/' . $view . '.php';
-        $content = ob_get_clean();
-
-        require ADMIN_VIEWS_PATH . '/layouts/main.php';
-    }
 }
