@@ -580,13 +580,27 @@ class AccountController extends BaseController {
         }
 
         try {
-            // Check if address belongs to user
-            $checkSql = "SELECT id FROM addresses WHERE id = ? AND user_id = ?";
+            // Check if address belongs to user and get its details
+            $checkSql = "SELECT id, is_default FROM addresses WHERE id = ? AND user_id = ?";
             $checkStmt = $this->db->prepare($checkSql);
             $checkStmt->execute([$id, $userId]);
+            $address = $checkStmt->fetch(PDO::FETCH_ASSOC);
 
-            if (!$checkStmt->fetch()) {
+            if (!$address) {
                 setFlashMessage('Adres bulunamadı.', 'error');
+                redirect('/account/addresses');
+                return;
+            }
+
+            // Check if user has other addresses
+            $countSql = "SELECT COUNT(*) as total FROM addresses WHERE user_id = ?";
+            $countStmt = $this->db->prepare($countSql);
+            $countStmt->execute([$userId]);
+            $result = $countStmt->fetch(PDO::FETCH_ASSOC);
+
+            // Prevent deletion of default address if it's the only address or if there are other addresses
+            if ($address['is_default'] == 1 && $result['total'] > 1) {
+                setFlashMessage('Varsayılan adresi silmeden önce başka bir adresi varsayılan yapmalısınız.', 'error');
                 redirect('/account/addresses');
                 return;
             }
@@ -791,24 +805,46 @@ class AccountController extends BaseController {
         }
 
         try {
-            // Check if payment method belongs to user
-            $checkSql = "SELECT id FROM saved_payment_methods WHERE id = ? AND user_id = ?";
+            // Check if payment method belongs to user and get its details
+            $checkSql = "SELECT id, is_default FROM saved_payment_methods WHERE id = ? AND user_id = ? AND is_active = 1";
             $checkStmt = $this->db->prepare($checkSql);
             $checkStmt->execute([$id, $userId]);
+            $paymentMethod = $checkStmt->fetch(PDO::FETCH_ASSOC);
 
-            if (!$checkStmt->fetch()) {
+            if (!$paymentMethod) {
                 setFlashMessage('Ödeme yöntemi bulunamadı.', 'error');
                 redirect('/account/payment-methods');
                 return;
             }
 
+            $this->db->beginTransaction();
+
             // Soft delete - set is_active to 0
-            $sql = "UPDATE saved_payment_methods SET is_active = 0 WHERE id = ? AND user_id = ?";
+            $sql = "UPDATE saved_payment_methods SET is_active = 0, is_default = 0 WHERE id = ? AND user_id = ?";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$id, $userId]);
 
+            // If this was default, set another active payment method as default
+            if ($paymentMethod['is_default'] == 1) {
+                $newDefaultSql = "SELECT id FROM saved_payment_methods
+                                  WHERE user_id = ? AND is_active = 1 AND id != ?
+                                  ORDER BY created_at DESC LIMIT 1";
+                $newDefaultStmt = $this->db->prepare($newDefaultSql);
+                $newDefaultStmt->execute([$userId, $id]);
+                $newDefault = $newDefaultStmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($newDefault) {
+                    $setDefaultSql = "UPDATE saved_payment_methods SET is_default = 1 WHERE id = ?";
+                    $setDefaultStmt = $this->db->prepare($setDefaultSql);
+                    $setDefaultStmt->execute([$newDefault['id']]);
+                }
+            }
+
+            $this->db->commit();
+
             setFlashMessage('Ödeme yöntemi başarıyla silindi.', 'success');
         } catch (Exception $e) {
+            $this->db->rollBack();
             error_log("Delete payment method error: " . $e->getMessage());
             setFlashMessage('Ödeme yöntemi silinirken bir hata oluştu. Lütfen tekrar deneyin.', 'error');
         }
@@ -1543,7 +1579,17 @@ class AccountController extends BaseController {
 
                 // Add to cart (or update quantity if already in cart)
                 if (isset($_SESSION['cart'][$item['product_id']])) {
-                    $_SESSION['cart'][$item['product_id']]['quantity'] += $item['quantity'];
+                    // Check if adding to existing cart quantity exceeds stock
+                    $newQuantity = $_SESSION['cart'][$item['product_id']]['quantity'] + $item['quantity'];
+
+                    if ($newQuantity > $item['stock_quantity']) {
+                        // Cap at available stock
+                        $oldQuantity = $_SESSION['cart'][$item['product_id']]['quantity'];
+                        $_SESSION['cart'][$item['product_id']]['quantity'] = $item['stock_quantity'];
+                        $skippedProducts[] = $item['name'] . ' (Sepette zaten ' . $oldQuantity . ' adet var, maksimum ' . $item['stock_quantity'] . ' adet eklenebilir)';
+                    } else {
+                        $_SESSION['cart'][$item['product_id']]['quantity'] = $newQuantity;
+                    }
                 } else {
                     $_SESSION['cart'][$item['product_id']] = [
                         'product_id' => $item['product_id'],
