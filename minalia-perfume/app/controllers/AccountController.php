@@ -1639,4 +1639,240 @@ class AccountController extends BaseController {
             'usage_history' => $usageHistory
         ]);
     }
+
+    /**
+     * Update KVKK consent settings
+     */
+    public function updateKVKKConsent() {
+        if (!isLoggedIn()) {
+            redirect('/login');
+            return;
+        }
+
+        $userId = getCurrentUserId();
+
+        // CSRF validation
+        if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
+            setFlashMessage('Güvenlik hatası. Lütfen tekrar deneyin.', 'error');
+            redirect('/account/security');
+            return;
+        }
+
+        $marketingConsent = isset($_POST['marketing_consent']) ? 1 : 0;
+        $personalizedAdsConsent = isset($_POST['personalized_ads_consent']) ? 1 : 0;
+        $dataSharingConsent = isset($_POST['data_sharing_consent']) ? 1 : 0;
+        $profilingConsent = isset($_POST['profiling_consent']) ? 1 : 0;
+
+        try {
+            // Check if preferences exist
+            $checkSql = "SELECT id FROM user_preferences WHERE user_id = ?";
+            $checkStmt = $this->db->prepare($checkSql);
+            $checkStmt->execute([$userId]);
+            $exists = $checkStmt->fetch();
+
+            if ($exists) {
+                $sql = "UPDATE user_preferences SET
+                        marketing_consent = ?,
+                        personalized_ads_consent = ?,
+                        data_sharing_consent = ?,
+                        profiling_consent = ?,
+                        updated_at = NOW()
+                        WHERE user_id = ?";
+                $stmt = $this->db->prepare($sql);
+                $stmt->execute([
+                    $marketingConsent,
+                    $personalizedAdsConsent,
+                    $dataSharingConsent,
+                    $profilingConsent,
+                    $userId
+                ]);
+            } else {
+                $sql = "INSERT INTO user_preferences (user_id, marketing_consent,
+                        personalized_ads_consent, data_sharing_consent, profiling_consent)
+                        VALUES (?, ?, ?, ?, ?)";
+                $stmt = $this->db->prepare($sql);
+                $stmt->execute([
+                    $userId,
+                    $marketingConsent,
+                    $personalizedAdsConsent,
+                    $dataSharingConsent,
+                    $profilingConsent
+                ]);
+            }
+
+            // Log KVKK activity
+            $logSql = "INSERT INTO kvkk_data_processing_log (user_id, activity_type, description,
+                       ip_address, user_agent, data_categories, processing_purpose)
+                       VALUES (?, 'consent_change', ?, ?, ?, ?, ?)";
+            $logStmt = $this->db->prepare($logSql);
+            $logStmt->execute([
+                $userId,
+                'KVKK izinleri güncellendi',
+                getClientIP(),
+                $_SERVER['HTTP_USER_AGENT'] ?? '',
+                json_encode(['preferences', 'consent']),
+                'user request'
+            ]);
+
+            setFlashMessage('KVKK izinleriniz başarıyla güncellendi.', 'success');
+        } catch (Exception $e) {
+            error_log("KVKK consent update error: " . $e->getMessage());
+            setFlashMessage('İzinler güncellenirken bir hata oluştu.', 'error');
+        }
+
+        redirect('/account/security#kvkk');
+    }
+
+    /**
+     * Request account deletion (KVKK right to deletion)
+     */
+    public function requestAccountDeletion() {
+        if (!isLoggedIn()) {
+            redirect('/login');
+            return;
+        }
+
+        $userId = getCurrentUserId();
+
+        // CSRF validation
+        if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
+            setFlashMessage('Güvenlik hatası. Lütfen tekrar deneyin.', 'error');
+            redirect('/account/security');
+            return;
+        }
+
+        $reason = sanitize($_POST['deletion_reason'] ?? '');
+
+        try {
+            // Check if there's already a pending request
+            $checkSql = "SELECT id FROM account_deletion_requests
+                         WHERE user_id = ? AND status = 'pending'";
+            $checkStmt = $this->db->prepare($checkSql);
+            $checkStmt->execute([$userId]);
+
+            if ($checkStmt->fetch()) {
+                setFlashMessage('Zaten bekleyen bir hesap silme talebiniz var.', 'info');
+                redirect('/account/security');
+                return;
+            }
+
+            // KVKK mandates 30-day retention period
+            $deletionDate = date('Y-m-d H:i:s', strtotime('+30 days'));
+
+            $sql = "INSERT INTO account_deletion_requests (user_id, reason, deletion_scheduled_at)
+                    VALUES (?, ?, ?)";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$userId, $reason, $deletionDate]);
+
+            // Update user preferences
+            $prefSql = "UPDATE user_preferences SET right_to_deletion_requested_at = NOW()
+                        WHERE user_id = ?";
+            $prefStmt = $this->db->prepare($prefSql);
+            $prefStmt->execute([$userId]);
+
+            // Log KVKK activity
+            $logSql = "INSERT INTO kvkk_data_processing_log (user_id, activity_type, description,
+                       ip_address, user_agent, data_categories, processing_purpose)
+                       VALUES (?, 'deletion_request', ?, ?, ?, ?, ?)";
+            $logStmt = $this->db->prepare($logSql);
+            $logStmt->execute([
+                $userId,
+                'Hesap silme talebi oluşturuldu. Silme tarihi: ' . $deletionDate,
+                getClientIP(),
+                $_SERVER['HTTP_USER_AGENT'] ?? '',
+                json_encode(['all_data']),
+                'KVKK right to deletion'
+            ]);
+
+            setFlashMessage('Hesap silme talebiniz alınmıştır. KVKK gereği hesabınız 30 gün sonra silinecektir. Bu süre içinde iptal edebilirsiniz.', 'success');
+
+            // Send email notification (would be implemented)
+            // TODO: Send deletion confirmation email
+
+        } catch (Exception $e) {
+            error_log("Account deletion request error: " . $e->getMessage());
+            setFlashMessage('Hesap silme talebi oluşturulurken bir hata oluştu.', 'error');
+        }
+
+        redirect('/account/security');
+    }
+
+    /**
+     * Download user data (KVKK right to portability)
+     */
+    public function downloadMyData() {
+        if (!isLoggedIn()) {
+            redirect('/login');
+            return;
+        }
+
+        $userId = getCurrentUserId();
+
+        try {
+            // Collect all user data
+            $userData = [
+                'export_date' => date('Y-m-d H:i:s'),
+                'user_info' => $this->userModel->find($userId),
+                'addresses' => [],
+                'orders' => [],
+                'reviews' => [],
+                'preferences' => []
+            ];
+
+            // Get addresses
+            $addrSql = "SELECT * FROM addresses WHERE user_id = ?";
+            $addrStmt = $this->db->prepare($addrSql);
+            $addrStmt->execute([$userId]);
+            $userData['addresses'] = $addrStmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Get orders (last 100)
+            $orderSql = "SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 100";
+            $orderStmt = $this->db->prepare($orderSql);
+            $orderStmt->execute([$userId]);
+            $userData['orders'] = $orderStmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Get reviews
+            $reviewSql = "SELECT * FROM reviews WHERE user_id = ?";
+            $reviewStmt = $this->db->prepare($reviewSql);
+            $reviewStmt->execute([$userId]);
+            $userData['reviews'] = $reviewStmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Get preferences
+            $prefSql = "SELECT * FROM user_preferences WHERE user_id = ?";
+            $prefStmt = $this->db->prepare($prefSql);
+            $prefStmt->execute([$userId]);
+            $userData['preferences'] = $prefStmt->fetch(PDO::FETCH_ASSOC);
+
+            // Log KVKK activity
+            $logSql = "INSERT INTO kvkk_data_processing_log (user_id, activity_type, description,
+                       ip_address, user_agent, data_categories, processing_purpose)
+                       VALUES (?, 'data_export', ?, ?, ?, ?, ?)";
+            $logStmt = $this->db->prepare($logSql);
+            $logStmt->execute([
+                $userId,
+                'Kullanıcı verilerini indirdi',
+                getClientIP(),
+                $_SERVER['HTTP_USER_AGENT'] ?? '',
+                json_encode(['profile', 'orders', 'addresses', 'reviews', 'preferences']),
+                'KVKK right to portability'
+            ]);
+
+            // Update preference
+            $updateSql = "UPDATE user_preferences SET right_to_portability_exercised_at = NOW()
+                          WHERE user_id = ?";
+            $updateStmt = $this->db->prepare($updateSql);
+            $updateStmt->execute([$userId]);
+
+            // Return JSON file
+            header('Content-Type: application/json');
+            header('Content-Disposition: attachment; filename="minalia_kullanici_verileri_' . $userId . '_' . date('Ymd') . '.json"');
+            echo json_encode($userData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+            exit;
+
+        } catch (Exception $e) {
+            error_log("Data export error: " . $e->getMessage());
+            setFlashMessage('Veri indirme sırasında bir hata oluştu.', 'error');
+            redirect('/account/security');
+        }
+    }
 }

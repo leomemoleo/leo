@@ -106,6 +106,9 @@ $router->group('/account', function($router) {
     $router->post('/reviews/delete/{id}', 'AccountController@deleteReview', 'account.reviews.delete');
     $router->any('/preferences', 'AccountController@preferences', 'account.preferences');
     $router->get('/security', 'AccountController@security', 'account.security');
+    $router->post('/security/kvkk', 'AccountController@updateKVKKConsent', 'account.security.kvkk');
+    $router->post('/security/delete-account', 'AccountController@requestAccountDeletion', 'account.security.delete');
+    $router->get('/data/download', 'AccountController@downloadMyData', 'account.data.download');
     $router->get('/coupons', 'AccountController@coupons', 'account.coupons');
 });
 
