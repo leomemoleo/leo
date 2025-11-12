@@ -35,6 +35,16 @@
             <span>Sadakat Puanları</span>
         </a>
 
+        <a href="<?= BASE_URL ?>/account/notifications" class="sidebar-item <?= $active_menu === 'notifications' ? 'active' : '' ?>">
+            <i class="fas fa-bell"></i>
+            <span>Bildirimlerim</span>
+        </a>
+
+        <a href="<?= BASE_URL ?>/account/reviews" class="sidebar-item <?= $active_menu === 'reviews' ? 'active' : '' ?>">
+            <i class="fas fa-comment-alt"></i>
+            <span>Ürün Yorumlarım</span>
+        </a>
+
         <a href="<?= BASE_URL ?>/account/profile" class="sidebar-item <?= $active_menu === 'profile' ? 'active' : '' ?>">
             <i class="fas fa-user"></i>
             <span>Profil Bilgilerim</span>

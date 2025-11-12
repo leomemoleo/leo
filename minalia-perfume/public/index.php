@@ -97,6 +97,12 @@ $router->group('/account', function($router) {
     $router->get('/returns/{id}', 'AccountController@returnDetail', 'account.returns.detail');
     $router->any('/returns/create/{orderId}', 'AccountController@createReturn', 'account.returns.create');
     $router->post('/returns/cancel/{id}', 'AccountController@cancelReturn', 'account.returns.cancel');
+    $router->get('/notifications', 'AccountController@notifications', 'account.notifications');
+    $router->post('/notifications/mark/{id}', 'AccountController@markNotificationRead', 'account.notifications.mark');
+    $router->post('/notifications/delete/{id}', 'AccountController@deleteNotification', 'account.notifications.delete');
+    $router->any('/notifications/preferences', 'AccountController@notificationPreferences', 'account.notifications.preferences');
+    $router->get('/reviews', 'AccountController@reviews', 'account.reviews');
+    $router->post('/reviews/delete/{id}', 'AccountController@deleteReview', 'account.reviews.delete');
 });
 
 // Reviews

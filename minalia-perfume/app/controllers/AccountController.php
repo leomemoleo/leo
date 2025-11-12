@@ -1059,4 +1059,263 @@ class AccountController extends BaseController {
 
         redirect('/account/returns');
     }
+
+    /**
+     * Notifications list
+     */
+    public function notifications() {
+        $userId = getCurrentUserId();
+
+        // Mark as read if requested
+        if (isset($_GET['mark_all_read'])) {
+            $sql = "UPDATE notifications SET is_read = 1, read_at = NOW() WHERE user_id = ? AND is_read = 0";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$userId]);
+            redirect('/account/notifications');
+            return;
+        }
+
+        // Get notifications
+        $sql = "SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$userId]);
+        $notifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Get unread count
+        $countSql = "SELECT COUNT(*) as unread_count FROM notifications WHERE user_id = ? AND is_read = 0";
+        $countStmt = $this->db->prepare($countSql);
+        $countStmt->execute([$userId]);
+        $unreadCount = $countStmt->fetch(PDO::FETCH_ASSOC)['unread_count'];
+
+        $this->view('account/notifications', [
+            'title' => 'Bildirimlerim',
+            'notifications' => $notifications,
+            'unread_count' => $unreadCount
+        ]);
+    }
+
+    /**
+     * Mark notification as read
+     */
+    public function markNotificationRead($id) {
+        $userId = getCurrentUserId();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('/account/notifications');
+            return;
+        }
+
+        try {
+            $sql = "UPDATE notifications SET is_read = 1, read_at = NOW() WHERE id = ? AND user_id = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$id, $userId]);
+
+            echo json_encode(['success' => true]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Delete notification
+     */
+    public function deleteNotification($id) {
+        $userId = getCurrentUserId();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('/account/notifications');
+            return;
+        }
+
+        // CSRF validation
+        if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
+            setFlashMessage('Güvenlik hatası.', 'error');
+            redirect('/account/notifications');
+            return;
+        }
+
+        try {
+            $sql = "DELETE FROM notifications WHERE id = ? AND user_id = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$id, $userId]);
+
+            setFlashMessage('Bildirim silindi.', 'success');
+        } catch (Exception $e) {
+            error_log("Delete notification error: " . $e->getMessage());
+            setFlashMessage('Bildirim silinirken bir hata oluştu.', 'error');
+        }
+
+        redirect('/account/notifications');
+    }
+
+    /**
+     * Notification preferences
+     */
+    public function notificationPreferences() {
+        $userId = getCurrentUserId();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // CSRF validation
+            if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
+                setFlashMessage('Güvenlik hatası.', 'error');
+                redirect('/account/notifications/preferences');
+                return;
+            }
+
+            $preferences = [
+                'email_notifications' => isset($_POST['email_notifications']) ? 1 : 0,
+                'sms_notifications' => isset($_POST['sms_notifications']) ? 1 : 0,
+                'push_notifications' => isset($_POST['push_notifications']) ? 1 : 0,
+                'order_updates' => isset($_POST['order_updates']) ? 1 : 0,
+                'return_updates' => isset($_POST['return_updates']) ? 1 : 0,
+                'shipping_updates' => isset($_POST['shipping_updates']) ? 1 : 0,
+                'promotions' => isset($_POST['promotions']) ? 1 : 0,
+                'price_drops' => isset($_POST['price_drops']) ? 1 : 0,
+                'stock_alerts' => isset($_POST['stock_alerts']) ? 1 : 0,
+                'review_responses' => isset($_POST['review_responses']) ? 1 : 0,
+                'loyalty_updates' => isset($_POST['loyalty_updates']) ? 1 : 0
+            ];
+
+            try {
+                // Check if preferences exist
+                $checkSql = "SELECT id FROM notification_preferences WHERE user_id = ?";
+                $checkStmt = $this->db->prepare($checkSql);
+                $checkStmt->execute([$userId]);
+                $exists = $checkStmt->fetch();
+
+                if ($exists) {
+                    // Update
+                    $sql = "UPDATE notification_preferences SET
+                            email_notifications = ?, sms_notifications = ?, push_notifications = ?,
+                            order_updates = ?, return_updates = ?, shipping_updates = ?,
+                            promotions = ?, price_drops = ?, stock_alerts = ?,
+                            review_responses = ?, loyalty_updates = ?, updated_at = NOW()
+                            WHERE user_id = ?";
+                    $stmt = $this->db->prepare($sql);
+                    $stmt->execute([
+                        $preferences['email_notifications'], $preferences['sms_notifications'], $preferences['push_notifications'],
+                        $preferences['order_updates'], $preferences['return_updates'], $preferences['shipping_updates'],
+                        $preferences['promotions'], $preferences['price_drops'], $preferences['stock_alerts'],
+                        $preferences['review_responses'], $preferences['loyalty_updates'], $userId
+                    ]);
+                } else {
+                    // Insert
+                    $sql = "INSERT INTO notification_preferences (user_id, email_notifications, sms_notifications, push_notifications,
+                            order_updates, return_updates, shipping_updates, promotions, price_drops, stock_alerts,
+                            review_responses, loyalty_updates, updated_at)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+                    $stmt = $this->db->prepare($sql);
+                    $stmt->execute([
+                        $userId, $preferences['email_notifications'], $preferences['sms_notifications'], $preferences['push_notifications'],
+                        $preferences['order_updates'], $preferences['return_updates'], $preferences['shipping_updates'],
+                        $preferences['promotions'], $preferences['price_drops'], $preferences['stock_alerts'],
+                        $preferences['review_responses'], $preferences['loyalty_updates']
+                    ]);
+                }
+
+                setFlashMessage('Bildirim tercihleri güncellendi.', 'success');
+            } catch (Exception $e) {
+                error_log("Update notification preferences error: " . $e->getMessage());
+                setFlashMessage('Tercihler güncellenirken bir hata oluştu.', 'error');
+            }
+
+            redirect('/account/notifications/preferences');
+            return;
+        }
+
+        // Get current preferences
+        $sql = "SELECT * FROM notification_preferences WHERE user_id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$userId]);
+        $preferences = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Default preferences if not set
+        if (!$preferences) {
+            $preferences = [
+                'email_notifications' => 1,
+                'sms_notifications' => 1,
+                'push_notifications' => 1,
+                'order_updates' => 1,
+                'return_updates' => 1,
+                'shipping_updates' => 1,
+                'promotions' => 1,
+                'price_drops' => 1,
+                'stock_alerts' => 1,
+                'review_responses' => 1,
+                'loyalty_updates' => 1
+            ];
+        }
+
+        $this->view('account/notification-preferences', [
+            'title' => 'Bildirim Tercihleri',
+            'preferences' => $preferences
+        ]);
+    }
+
+    /**
+     * My reviews
+     */
+    public function reviews() {
+        $userId = getCurrentUserId();
+
+        $sql = "SELECT r.*, p.name as product_name, p.slug as product_slug, p.main_image as product_image,
+                b.name as brand_name
+                FROM reviews r
+                INNER JOIN products p ON r.product_id = p.id
+                INNER JOIN brands b ON p.brand_id = b.id
+                WHERE r.user_id = ?
+                ORDER BY r.created_at DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$userId]);
+        $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->view('account/reviews', [
+            'title' => 'Ürün Yorumlarım',
+            'reviews' => $reviews
+        ]);
+    }
+
+    /**
+     * Delete review
+     */
+    public function deleteReview($id) {
+        $userId = getCurrentUserId();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('/account/reviews');
+            return;
+        }
+
+        // CSRF validation
+        if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
+            setFlashMessage('Güvenlik hatası.', 'error');
+            redirect('/account/reviews');
+            return;
+        }
+
+        try {
+            // Check if review belongs to user
+            $checkSql = "SELECT id FROM reviews WHERE id = ? AND user_id = ?";
+            $checkStmt = $this->db->prepare($checkSql);
+            $checkStmt->execute([$id, $userId]);
+
+            if (!$checkStmt->fetch()) {
+                setFlashMessage('Yorum bulunamadı.', 'error');
+                redirect('/account/reviews');
+                return;
+            }
+
+            // Delete review
+            $sql = "DELETE FROM reviews WHERE id = ? AND user_id = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$id, $userId]);
+
+            setFlashMessage('Yorumunuz silindi.', 'success');
+        } catch (Exception $e) {
+            error_log("Delete review error: " . $e->getMessage());
+            setFlashMessage('Yorum silinirken bir hata oluştu.', 'error');
+        }
+
+        redirect('/account/reviews');
+    }
 }
