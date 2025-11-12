@@ -37,7 +37,7 @@
                                             </div>
                                             <div>
                                                 <div style="font-weight: 600;">Google</div>
-                                                <div style="color: #666; font-size: 0.875rem;"><?= htmlspecialchars($account['provider_user_email'] ?? 'Bağlı') ?></div>
+                                                <div style="color: #666; font-size: 0.875rem;"><?= htmlspecialchars($account['provider_email'] ?? 'Bağlı') ?></div>
                                             </div>
                                         <?php elseif ($account['provider'] === 'facebook'): ?>
                                             <div style="width: 48px; height: 48px; background: #1877F2; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
@@ -45,7 +45,7 @@
                                             </div>
                                             <div>
                                                 <div style="font-weight: 600;">Facebook</div>
-                                                <div style="color: #666; font-size: 0.875rem;"><?= htmlspecialchars($account['provider_user_email'] ?? 'Bağlı') ?></div>
+                                                <div style="color: #666; font-size: 0.875rem;"><?= htmlspecialchars($account['provider_email'] ?? 'Bağlı') ?></div>
                                             </div>
                                         <?php endif; ?>
                                     </div>

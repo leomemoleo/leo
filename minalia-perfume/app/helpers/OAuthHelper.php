@@ -411,6 +411,33 @@ class SocialAccountManager {
     }
 
     /**
+     * Link social account to existing user
+     * Used when a logged-in user wants to connect a new social account
+     */
+    public function linkSocialAccountToUser($userId, $provider, $socialUserInfo, $tokenData) {
+        // Check if this social account is already linked to any user
+        $stmt = $this->db->prepare("
+            SELECT user_id FROM social_accounts
+            WHERE provider = ? AND provider_user_id = ?
+        ");
+        $stmt->execute([$provider, $socialUserInfo['id']]);
+        $existing = $stmt->fetch();
+
+        if ($existing) {
+            if ($existing['user_id'] == $userId) {
+                // Already linked to this user - just update tokens
+                $this->updateSocialAccount($userId, $provider, $socialUserInfo, $tokenData);
+                return;
+            } else {
+                throw new Exception('Bu sosyal medya hesabı başka bir kullanıcıya bağlı.');
+            }
+        }
+
+        // Create new social account link
+        $this->createSocialAccount($userId, $provider, $socialUserInfo, $tokenData);
+    }
+
+    /**
      * Disconnect social account
      */
     public function disconnectSocialAccount($userId, $provider) {

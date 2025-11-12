@@ -63,8 +63,35 @@ class OAuthController {
             // Get user information
             $userInfo = $provider->getUserInfo($tokenData['access_token']);
 
-            // Create or update user
             $socialManager = new SocialAccountManager($this->db);
+
+            // Check if user is already logged in (linking scenario)
+            if (isLoggedIn()) {
+                $currentUserId = getCurrentUserId();
+
+                // Check if this Google account is already linked to another user
+                $stmt = $this->db->prepare("SELECT user_id FROM social_accounts WHERE provider = 'google' AND provider_user_id = ?");
+                $stmt->execute([$userInfo['id']]);
+                $existingLink = $stmt->fetch();
+
+                if ($existingLink && $existingLink['user_id'] != $currentUserId) {
+                    throw new Exception('Bu Google hesabı başka bir kullanıcıya bağlı.');
+                }
+
+                if ($existingLink && $existingLink['user_id'] == $currentUserId) {
+                    setFlashMessage('Bu Google hesabı zaten hesabınıza bağlı.', 'info');
+                    redirect('/account/security');
+                    return;
+                }
+
+                // Link to current user
+                $socialManager->linkSocialAccountToUser($currentUserId, 'google', $userInfo, $tokenData);
+                setFlashMessage('Google hesabınız başarıyla bağlandı!', 'success');
+                redirect('/account/security');
+                return;
+            }
+
+            // Not logged in - normal login flow
             $userId = $socialManager->findOrCreateUser('google', $userInfo, $tokenData);
 
             // Log user in
@@ -132,8 +159,35 @@ class OAuthController {
                 throw new Exception('Facebook hesabınızdan email alınamadı. Lütfen email iznini verin.');
             }
 
-            // Create or update user
             $socialManager = new SocialAccountManager($this->db);
+
+            // Check if user is already logged in (linking scenario)
+            if (isLoggedIn()) {
+                $currentUserId = getCurrentUserId();
+
+                // Check if this Facebook account is already linked to another user
+                $stmt = $this->db->prepare("SELECT user_id FROM social_accounts WHERE provider = 'facebook' AND provider_user_id = ?");
+                $stmt->execute([$userInfo['id']]);
+                $existingLink = $stmt->fetch();
+
+                if ($existingLink && $existingLink['user_id'] != $currentUserId) {
+                    throw new Exception('Bu Facebook hesabı başka bir kullanıcıya bağlı.');
+                }
+
+                if ($existingLink && $existingLink['user_id'] == $currentUserId) {
+                    setFlashMessage('Bu Facebook hesabı zaten hesabınıza bağlı.', 'info');
+                    redirect('/account/security');
+                    return;
+                }
+
+                // Link to current user
+                $socialManager->linkSocialAccountToUser($currentUserId, 'facebook', $userInfo, $tokenData);
+                setFlashMessage('Facebook hesabınız başarıyla bağlandı!', 'success');
+                redirect('/account/security');
+                return;
+            }
+
+            // Not logged in - normal login flow
             $userId = $socialManager->findOrCreateUser('facebook', $userInfo, $tokenData);
 
             // Log user in
@@ -157,31 +211,54 @@ class OAuthController {
             return;
         }
 
+        // CSRF validation
+        if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
+            setFlashMessage('Güvenlik hatası. Lütfen tekrar deneyin.', 'error');
+            redirect('/account/security');
+            return;
+        }
+
         $provider = $_POST['provider'] ?? '';
+        $userId = getCurrentUserId();
 
         if (!in_array($provider, ['google', 'facebook'])) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Geçersiz provider'
-            ]);
+            setFlashMessage('Geçersiz sosyal medya hesabı.', 'error');
+            redirect('/account/security');
             return;
         }
 
         try {
-            $socialManager = new SocialAccountManager($this->db);
-            $socialManager->disconnectSocialAccount($_SESSION[SESSION_USER_ID], $provider);
+            // Check if user has a password set
+            // Prevent disconnecting if it's the only login method
+            $stmt = $this->db->prepare("SELECT password FROM users WHERE id = ?");
+            $stmt->execute([$userId]);
+            $user = $stmt->fetch();
 
-            echo json_encode([
-                'success' => true,
-                'message' => ucfirst($provider) . ' bağlantısı kesildi.'
-            ]);
+            // Check how many social accounts are connected
+            $countStmt = $this->db->prepare("SELECT COUNT(*) as count FROM social_accounts WHERE user_id = ?");
+            $countStmt->execute([$userId]);
+            $socialCount = $countStmt->fetch()['count'];
+
+            // If no password and this is the last social account, prevent disconnection
+            if (empty($user['password']) && $socialCount <= 1) {
+                setFlashMessage('Bu hesabı kaldıramazsınız. Hesabınıza erişim sağlamanız için en az bir giriş yöntemi gereklidir. Önce bir şifre belirleyin.', 'error');
+                redirect('/account/security');
+                return;
+            }
+
+            // Disconnect the account
+            $socialManager = new SocialAccountManager($this->db);
+            $socialManager->disconnectSocialAccount($userId, $provider);
+
+            $providerName = $provider === 'google' ? 'Google' : 'Facebook';
+            setFlashMessage($providerName . ' hesabı başarıyla kaldırıldı.', 'success');
 
         } catch (Exception $e) {
-            echo json_encode([
-                'success' => false,
-                'message' => $e->getMessage()
-            ]);
+            error_log('OAuth disconnect error: ' . $e->getMessage());
+            setFlashMessage('Hesap kaldırılırken bir hata oluştu: ' . $e->getMessage(), 'error');
         }
+
+        redirect('/account/security');
     }
 
     /**
