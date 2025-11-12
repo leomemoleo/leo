@@ -535,10 +535,57 @@
     function initMobileMenu() {
         const toggle = $('.mobile-menu-toggle');
         const nav = $('.header-nav');
+        const body = document.body;
 
         if (toggle && nav) {
-            toggle.addEventListener('click', () => {
+            // Toggle mobile menu
+            toggle.addEventListener('click', (e) => {
+                e.stopPropagation();
                 nav.classList.toggle('active');
+                body.style.overflow = nav.classList.contains('active') ? 'hidden' : '';
+            });
+
+            // Close button (::before pseudo element)
+            nav.addEventListener('click', (e) => {
+                if (e.target === nav) {
+                    nav.classList.remove('active');
+                    body.style.overflow = '';
+                }
+            });
+
+            // Submenu toggle
+            const submenus = $$('.header-nav .has-submenu > a');
+            submenus.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    if (window.innerWidth <= 768) {
+                        e.preventDefault();
+                        const parent = link.parentElement;
+                        parent.classList.toggle('open');
+
+                        // Close other submenus
+                        $$('.header-nav .has-submenu').forEach(item => {
+                            if (item !== parent) {
+                                item.classList.remove('open');
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Close menu on window resize if desktop
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 768 && nav.classList.contains('active')) {
+                    nav.classList.remove('active');
+                    body.style.overflow = '';
+                }
+            });
+
+            // Close menu on ESC key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && nav.classList.contains('active')) {
+                    nav.classList.remove('active');
+                    body.style.overflow = '';
+                }
             });
         }
     }

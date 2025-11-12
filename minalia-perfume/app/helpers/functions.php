@@ -514,3 +514,120 @@ function getCurrency() {
 function isFeatureEnabled($feature) {
     return getSettingBool('enable_' . $feature, true);
 }
+
+// ===================================
+// PLACEHOLDER IMAGE HELPERS
+// ===================================
+
+/**
+ * Generate placeholder image URL
+ *
+ * @param int $width Image width
+ * @param int $height Image height
+ * @param string $text Placeholder text
+ * @param string $bgColor Background color (hex without #)
+ * @param string $textColor Text color (hex without #)
+ * @return string Placeholder URL
+ */
+function getPlaceholder($width = 400, $height = 400, $text = null, $bgColor = '7A8B5C', $textColor = 'FFFFFF') {
+    $text = $text ?? "{$width}x{$height}";
+    $text = urlencode($text);
+    return "https://via.placeholder.com/{$width}x{$height}/{$bgColor}/{$textColor}?text={$text}";
+}
+
+/**
+ * Get product placeholder image
+ *
+ * @param string $productName Product name for text
+ * @param int $width Image width
+ * @param int $height Image height
+ * @return string Placeholder URL
+ */
+function getProductPlaceholder($productName = null, $width = 400, $height = 400) {
+    $text = $productName ? truncate($productName, 20, '...') : 'MINALIA';
+    return getPlaceholder($width, $height, $text, '7A8B5C', 'FFFFFF');
+}
+
+/**
+ * Get category placeholder image
+ *
+ * @param string $categoryName Category name
+ * @param int $width Image width
+ * @param int $height Image height
+ * @return string Placeholder URL
+ */
+function getCategoryPlaceholder($categoryName = null, $width = 600, $height = 400) {
+    $text = $categoryName ?? 'Kategori';
+    return getPlaceholder($width, $height, $text, 'D4AF37', 'FFFFFF');
+}
+
+/**
+ * Get brand logo placeholder
+ *
+ * @param string $brandName Brand name
+ * @param int $width Image width
+ * @param int $height Image height
+ * @return string Placeholder URL
+ */
+function getBrandPlaceholder($brandName = null, $width = 200, $height = 100) {
+    $text = $brandName ?? 'Brand';
+    return getPlaceholder($width, $height, $text, 'F8F5F0', '2C2C2C');
+}
+
+/**
+ * Get user avatar placeholder
+ *
+ * @param string $name User name
+ * @param int $size Avatar size
+ * @return string Placeholder URL
+ */
+function getAvatarPlaceholder($name = null, $size = 100) {
+    $initials = 'U';
+    if ($name) {
+        $parts = explode(' ', $name);
+        $initials = strtoupper(substr($parts[0], 0, 1));
+        if (isset($parts[1])) {
+            $initials .= strtoupper(substr($parts[1], 0, 1));
+        }
+    }
+    return getPlaceholder($size, $size, $initials, '7A8B5C', 'FFFFFF');
+}
+
+/**
+ * Get image with fallback to placeholder
+ *
+ * @param string|null $imagePath Image path
+ * @param string $placeholderText Placeholder text
+ * @param int $width Width
+ * @param int $height Height
+ * @return string Image URL or placeholder
+ */
+function getImageOrPlaceholder($imagePath, $placeholderText = null, $width = 400, $height = 400) {
+    if ($imagePath && file_exists(PUBLIC_PATH . $imagePath)) {
+        return BASE_URL . $imagePath;
+    }
+    return getProductPlaceholder($placeholderText, $width, $height);
+}
+
+/**
+ * Generate local SVG placeholder
+ * Returns data URI with inline SVG
+ *
+ * @param int $width Width
+ * @param int $height Height
+ * @param string $text Text to display
+ * @param string $bgColor Background color
+ * @param string $textColor Text color
+ * @return string Data URI
+ */
+function getSVGPlaceholder($width = 400, $height = 400, $text = 'MINALIA', $bgColor = '#7A8B5C', $textColor = '#FFFFFF') {
+    $fontSize = min($width, $height) / 8;
+    $svg = <<<SVG
+<svg width="{$width}" height="{$height}" xmlns="http://www.w3.org/2000/svg">
+  <rect width="{$width}" height="{$height}" fill="{$bgColor}"/>
+  <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="{$fontSize}" fill="{$textColor}" text-anchor="middle" dominant-baseline="middle">{$text}</text>
+  <text x="50%" y="60%" font-family="Arial, sans-serif" font-size="14" fill="{$textColor}" opacity="0.7" text-anchor="middle" dominant-baseline="middle">{$width}×{$height}</text>
+</svg>
+SVG;
+    return 'data:image/svg+xml;base64,' . base64_encode($svg);
+}
