@@ -620,4 +620,215 @@ class AccountController extends BaseController {
 
         redirect('/account/addresses');
     }
+
+    /**
+     * Payment methods list
+     */
+    public function paymentMethods() {
+        $userId = getCurrentUserId();
+
+        $sql = "SELECT * FROM saved_payment_methods WHERE user_id = ? AND is_active = 1 ORDER BY is_default DESC, created_at DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$userId]);
+        $paymentMethods = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->view('account/payment-methods', [
+            'title' => 'Ödeme Yöntemlerim',
+            'payment_methods' => $paymentMethods
+        ]);
+    }
+
+    /**
+     * Add payment method
+     */
+    public function addPaymentMethod() {
+        $userId = getCurrentUserId();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('/account/payment-methods');
+            return;
+        }
+
+        // CSRF validation
+        if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
+            setFlashMessage('Güvenlik hatası. Lütfen tekrar deneyin.', 'error');
+            redirect('/account/payment-methods');
+            return;
+        }
+
+        // Get card information
+        $cardAlias = sanitize($_POST['card_alias'] ?? '');
+        $cardToken = sanitize($_POST['card_token'] ?? ''); // From payment gateway
+        $cardBrand = sanitize($_POST['card_brand'] ?? '');
+        $lastFourDigits = sanitize($_POST['last_four_digits'] ?? '');
+        $expiryMonth = (int)($_POST['expiry_month'] ?? 0);
+        $expiryYear = (int)($_POST['expiry_year'] ?? 0);
+        $cardholderName = sanitize($_POST['cardholder_name'] ?? '');
+        $isDefault = isset($_POST['is_default']) ? 1 : 0;
+
+        // Validation
+        $errors = [];
+
+        if (empty($cardAlias)) {
+            $errors[] = 'Kart ismi zorunludur.';
+        }
+
+        if (empty($cardToken)) {
+            $errors[] = 'Geçersiz kart bilgisi.';
+        }
+
+        if (empty($cardholderName)) {
+            $errors[] = 'Kart sahibi adı zorunludur.';
+        }
+
+        if (!in_array($cardBrand, ['visa', 'mastercard', 'amex', 'troy'])) {
+            $errors[] = 'Geçersiz kart markası.';
+        }
+
+        if ($expiryMonth < 1 || $expiryMonth > 12) {
+            $errors[] = 'Geçersiz ay.';
+        }
+
+        if ($expiryYear < date('Y')) {
+            $errors[] = 'Kart süresi dolmuş.';
+        }
+
+        if (!empty($errors)) {
+            foreach ($errors as $error) {
+                setFlashMessage($error, 'error');
+            }
+            redirect('/account/payment-methods');
+            return;
+        }
+
+        try {
+            $this->db->beginTransaction();
+
+            // If this is set as default, remove default from other cards
+            if ($isDefault) {
+                $sql = "UPDATE saved_payment_methods SET is_default = 0 WHERE user_id = ?";
+                $stmt = $this->db->prepare($sql);
+                $stmt->execute([$userId]);
+            }
+
+            // Insert new payment method
+            $sql = "INSERT INTO saved_payment_methods (user_id, card_token, card_alias, card_brand,
+                    last_four_digits, expiry_month, expiry_year, cardholder_name, is_default, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                $userId, $cardToken, $cardAlias, $cardBrand,
+                $lastFourDigits, $expiryMonth, $expiryYear, $cardholderName, $isDefault
+            ]);
+
+            $this->db->commit();
+
+            setFlashMessage('Ödeme yöntemi başarıyla eklendi.', 'success');
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log("Add payment method error: " . $e->getMessage());
+            setFlashMessage('Ödeme yöntemi eklenirken bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+        }
+
+        redirect('/account/payment-methods');
+    }
+
+    /**
+     * Delete payment method
+     */
+    public function deletePaymentMethod($id) {
+        $userId = getCurrentUserId();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('/account/payment-methods');
+            return;
+        }
+
+        // CSRF validation
+        if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
+            setFlashMessage('Güvenlik hatası. Lütfen tekrar deneyin.', 'error');
+            redirect('/account/payment-methods');
+            return;
+        }
+
+        try {
+            // Check if payment method belongs to user
+            $checkSql = "SELECT id FROM saved_payment_methods WHERE id = ? AND user_id = ?";
+            $checkStmt = $this->db->prepare($checkSql);
+            $checkStmt->execute([$id, $userId]);
+
+            if (!$checkStmt->fetch()) {
+                setFlashMessage('Ödeme yöntemi bulunamadı.', 'error');
+                redirect('/account/payment-methods');
+                return;
+            }
+
+            // Soft delete - set is_active to 0
+            $sql = "UPDATE saved_payment_methods SET is_active = 0 WHERE id = ? AND user_id = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$id, $userId]);
+
+            setFlashMessage('Ödeme yöntemi başarıyla silindi.', 'success');
+        } catch (Exception $e) {
+            error_log("Delete payment method error: " . $e->getMessage());
+            setFlashMessage('Ödeme yöntemi silinirken bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+        }
+
+        redirect('/account/payment-methods');
+    }
+
+    /**
+     * Set default payment method
+     */
+    public function setDefaultPaymentMethod($id) {
+        $userId = getCurrentUserId();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('/account/payment-methods');
+            return;
+        }
+
+        // CSRF validation
+        if (!verifyCSRFToken($_POST['csrf_token'] ?? '')) {
+            setFlashMessage('Güvenlik hatası. Lütfen tekrar deneyin.', 'error');
+            redirect('/account/payment-methods');
+            return;
+        }
+
+        try {
+            // Check if payment method belongs to user
+            $checkSql = "SELECT id FROM saved_payment_methods WHERE id = ? AND user_id = ?";
+            $checkStmt = $this->db->prepare($checkSql);
+            $checkStmt->execute([$id, $userId]);
+
+            if (!$checkStmt->fetch()) {
+                setFlashMessage('Ödeme yöntemi bulunamadı.', 'error');
+                redirect('/account/payment-methods');
+                return;
+            }
+
+            $this->db->beginTransaction();
+
+            // Remove default from all payment methods
+            $sql = "UPDATE saved_payment_methods SET is_default = 0 WHERE user_id = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$userId]);
+
+            // Set this payment method as default
+            $sql = "UPDATE saved_payment_methods SET is_default = 1 WHERE id = ? AND user_id = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$id, $userId]);
+
+            $this->db->commit();
+
+            setFlashMessage('Varsayılan ödeme yöntemi ayarlandı.', 'success');
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log("Set default payment method error: " . $e->getMessage());
+            setFlashMessage('Varsayılan ödeme yöntemi ayarlanırken bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+        }
+
+        redirect('/account/payment-methods');
+    }
 }

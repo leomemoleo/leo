@@ -15,7 +15,12 @@
             <span>Adreslerim</span>
         </a>
 
-        <a href="<?= BASE_URL ?>/account/wishlist" class="sidebar-item <?= $active_menu === 'wishlist' ? 'active' : '' ?>">
+        <a href="<?= BASE_URL ?>/account/payment-methods" class="sidebar-item <?= $active_menu === 'payment-methods' ? 'active' : '' ?>">
+            <i class="fas fa-credit-card"></i>
+            <span>Ödeme Yöntemlerim</span>
+        </a>
+
+        <a href="<?= BASE_URL ?>/wishlist" class="sidebar-item <?= $active_menu === 'wishlist' ? 'active' : '' ?>">
             <i class="fas fa-heart"></i>
             <span>Favorilerim</span>
         </a>

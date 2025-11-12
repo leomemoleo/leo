@@ -89,6 +89,10 @@ $router->group('/account', function($router) {
     $router->post('/addresses/set-default/{id}', 'AccountController@setDefaultAddress', 'account.addresses.default');
     $router->post('/change-password', 'AccountController@changePassword', 'account.password.change');
     $router->get('/loyalty', 'AccountController@loyalty', 'account.loyalty');
+    $router->get('/payment-methods', 'AccountController@paymentMethods', 'account.payment.methods');
+    $router->post('/payment-methods/add', 'AccountController@addPaymentMethod', 'account.payment.add');
+    $router->post('/payment-methods/delete/{id}', 'AccountController@deletePaymentMethod', 'account.payment.delete');
+    $router->post('/payment-methods/set-default/{id}', 'AccountController@setDefaultPaymentMethod', 'account.payment.default');
 });
 
 // Reviews
