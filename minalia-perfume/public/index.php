@@ -133,7 +133,11 @@ $router->group('/api', function($router) {
     $router->post('/cart/count', 'Api\CartApiController@count');
     $router->post('/wishlist/count', 'Api\WishlistApiController@count');
     $router->get('/products/featured', 'Api\ProductApiController@featured');
-    $router->get('/products/search-suggestions', 'Api\ProductApiController@searchSuggestions');
+    $router->get('/products/filter', 'ApiController@filterProducts');
+    $router->get('/search/autocomplete', 'ApiController@searchSuggestions');
+    $router->get('/search/suggestions', 'ApiController@searchSuggestions');
+    $router->post('/coupon/validate', 'ApiController@validateCoupon');
+    $router->get('/recommendations', 'ApiController@aiRecommendations');
 });
 
 // Dispatch the request
