@@ -89,88 +89,182 @@ class AutocompleteSearch {
     renderResults(results) {
         const { products, brands, categories, trending } = results;
 
-        let html = '';
+        // Clear previous results
+        this.resultsContainer.innerHTML = '';
 
         // Products
         if (products && products.length > 0) {
-            html += '<div class="autocomplete-section">';
-            html += '<div class="autocomplete-section-title">Ürünler</div>';
+            const section = this.createSection('Ürünler');
             products.forEach(product => {
-                html += `
-                    <a href="/products/${product.slug}" class="autocomplete-item">
-                        <img src="${product.main_image}" alt="${product.name}" class="autocomplete-image">
-                        <div class="autocomplete-content">
-                            <div class="autocomplete-name">${product.name}</div>
-                            <div class="autocomplete-meta">
-                                <span class="brand">${product.brand_name}</span>
-                                <span class="price">${formatPrice(product.price)}</span>
-                            </div>
-                        </div>
-                    </a>
-                `;
+                const item = this.createProductItem(product);
+                section.appendChild(item);
             });
-            html += '</div>';
+            this.resultsContainer.appendChild(section);
         }
 
         // Brands
         if (brands && brands.length > 0) {
-            html += '<div class="autocomplete-section">';
-            html += '<div class="autocomplete-section-title">Markalar</div>';
+            const section = this.createSection('Markalar');
             brands.forEach(brand => {
-                html += `
-                    <a href="/brand/${brand.slug}" class="autocomplete-item">
-                        <i class="fas fa-tag"></i>
-                        <div class="autocomplete-content">
-                            <div class="autocomplete-name">${brand.name}</div>
-                            <div class="autocomplete-meta">${brand.product_count} ürün</div>
-                        </div>
-                    </a>
-                `;
+                const item = this.createBrandItem(brand);
+                section.appendChild(item);
             });
-            html += '</div>';
+            this.resultsContainer.appendChild(section);
         }
 
         // Categories
         if (categories && categories.length > 0) {
-            html += '<div class="autocomplete-section">';
-            html += '<div class="autocomplete-section-title">Kategoriler</div>';
+            const section = this.createSection('Kategoriler');
             categories.forEach(category => {
-                html += `
-                    <a href="/category/${category.slug}" class="autocomplete-item">
-                        <i class="fas fa-folder"></i>
-                        <div class="autocomplete-content">
-                            <div class="autocomplete-name">${category.name}</div>
-                            <div class="autocomplete-meta">${category.product_count} ürün</div>
-                        </div>
-                    </a>
-                `;
+                const item = this.createCategoryItem(category);
+                section.appendChild(item);
             });
-            html += '</div>';
+            this.resultsContainer.appendChild(section);
         }
 
         // Trending
         if (trending && trending.length > 0) {
-            html += '<div class="autocomplete-section">';
-            html += '<div class="autocomplete-section-title">🔥 Trend Aramalar</div>';
+            const section = this.createSection('🔥 Trend Aramalar');
             trending.forEach(term => {
-                html += `
-                    <a href="/search?q=${encodeURIComponent(term.search_term)}" class="autocomplete-item">
-                        <i class="fas fa-fire"></i>
-                        <div class="autocomplete-content">
-                            <div class="autocomplete-name">${term.search_term}</div>
-                        </div>
-                    </a>
-                `;
+                const item = this.createTrendingItem(term);
+                section.appendChild(item);
             });
-            html += '</div>';
+            this.resultsContainer.appendChild(section);
         }
 
         // Empty state
-        if (html === '') {
-            html = '<div class="autocomplete-empty">Sonuç bulunamadı</div>';
+        if (this.resultsContainer.children.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'autocomplete-empty';
+            empty.textContent = 'Sonuç bulunamadı';
+            this.resultsContainer.appendChild(empty);
         }
+    }
 
-        this.resultsContainer.innerHTML = html;
+    createSection(title) {
+        const section = document.createElement('div');
+        section.className = 'autocomplete-section';
+
+        const titleEl = document.createElement('div');
+        titleEl.className = 'autocomplete-section-title';
+        titleEl.textContent = title;
+
+        section.appendChild(titleEl);
+        return section;
+    }
+
+    createProductItem(product) {
+        const link = document.createElement('a');
+        link.href = '/products/' + escapeHtml(product.slug);
+        link.className = 'autocomplete-item';
+
+        const img = document.createElement('img');
+        img.src = escapeHtml(product.main_image);
+        img.alt = escapeHtml(product.name);
+        img.className = 'autocomplete-image';
+
+        const content = document.createElement('div');
+        content.className = 'autocomplete-content';
+
+        const name = document.createElement('div');
+        name.className = 'autocomplete-name';
+        name.textContent = product.name;
+
+        const meta = document.createElement('div');
+        meta.className = 'autocomplete-meta';
+
+        const brand = document.createElement('span');
+        brand.className = 'brand';
+        brand.textContent = product.brand_name;
+
+        const price = document.createElement('span');
+        price.className = 'price';
+        price.textContent = formatPrice(product.price);
+
+        meta.appendChild(brand);
+        meta.appendChild(price);
+        content.appendChild(name);
+        content.appendChild(meta);
+        link.appendChild(img);
+        link.appendChild(content);
+
+        return link;
+    }
+
+    createBrandItem(brand) {
+        const link = document.createElement('a');
+        link.href = '/brand/' + escapeHtml(brand.slug);
+        link.className = 'autocomplete-item';
+
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-tag';
+
+        const content = document.createElement('div');
+        content.className = 'autocomplete-content';
+
+        const name = document.createElement('div');
+        name.className = 'autocomplete-name';
+        name.textContent = brand.name;
+
+        const meta = document.createElement('div');
+        meta.className = 'autocomplete-meta';
+        meta.textContent = brand.product_count + ' ürün';
+
+        content.appendChild(name);
+        content.appendChild(meta);
+        link.appendChild(icon);
+        link.appendChild(content);
+
+        return link;
+    }
+
+    createCategoryItem(category) {
+        const link = document.createElement('a');
+        link.href = '/category/' + escapeHtml(category.slug);
+        link.className = 'autocomplete-item';
+
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-folder';
+
+        const content = document.createElement('div');
+        content.className = 'autocomplete-content';
+
+        const name = document.createElement('div');
+        name.className = 'autocomplete-name';
+        name.textContent = category.name;
+
+        const meta = document.createElement('div');
+        meta.className = 'autocomplete-meta';
+        meta.textContent = category.product_count + ' ürün';
+
+        content.appendChild(name);
+        content.appendChild(meta);
+        link.appendChild(icon);
+        link.appendChild(content);
+
+        return link;
+    }
+
+    createTrendingItem(term) {
+        const link = document.createElement('a');
+        link.href = '/search?q=' + encodeURIComponent(term.search_term);
+        link.className = 'autocomplete-item';
+
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-fire';
+
+        const content = document.createElement('div');
+        content.className = 'autocomplete-content';
+
+        const name = document.createElement('div');
+        name.className = 'autocomplete-name';
+        name.textContent = term.search_term;
+
+        content.appendChild(name);
+        link.appendChild(icon);
+        link.appendChild(content);
+
+        return link;
     }
 
     showResults() {
@@ -292,7 +386,7 @@ class FacetedFilters {
         if (clearButton) {
             clearButton.addEventListener('click', (e) => {
                 e.preventDefault();
-                this.clearAll Filters();
+                this.clearAllFilters();
             });
         }
     }
@@ -351,7 +445,38 @@ class FacetedFilters {
 // UTILITY FUNCTIONS
 // ==========================================
 
+/**
+ * Escape HTML to prevent XSS attacks
+ * @param {string} text - Text to escape
+ * @returns {string} Escaped text
+ */
+function escapeHtml(text) {
+    if (text === null || text === undefined) {
+        return '';
+    }
+
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;',
+        '/': '&#x2F;'
+    };
+
+    return String(text).replace(/[&<>"'/]/g, (char) => map[char]);
+}
+
+/**
+ * Format price in Turkish Lira
+ * @param {number} price - Price value
+ * @returns {string} Formatted price
+ */
 function formatPrice(price) {
+    if (isNaN(price) || price === null || price === undefined) {
+        return '0,00 ₺';
+    }
+
     return new Intl.NumberFormat('tr-TR', {
         style: 'currency',
         currency: 'TRY'

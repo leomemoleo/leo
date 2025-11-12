@@ -153,11 +153,25 @@ class ProductController extends BaseController {
         try {
             $db = $this->productModel->db;
 
-            // Remove order_by and page from filter tracking
+            // Remove sensitive and non-filter data
             $trackFilters = $filters;
-            unset($trackFilters['order_by'], $trackFilters['page']);
+            unset($trackFilters['order_by'], $trackFilters['page'], $trackFilters['csrf_token']);
+
+            // Sanitize filter values before JSON encoding
+            $trackFilters = array_map(function($value) {
+                if (is_string($value)) {
+                    return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+                }
+                return $value;
+            }, $trackFilters);
 
             $filterJson = json_encode($trackFilters);
+
+            // Prevent JSON too large
+            if (strlen($filterJson) > 1000) {
+                error_log("Filter combination too large, skipping analytics");
+                return;
+            }
 
             $sql = "INSERT INTO filter_analytics (filter_combination, usage_count, avg_result_count, last_used_at)
                     VALUES (?, 1, ?, NOW())
@@ -171,6 +185,7 @@ class ProductController extends BaseController {
 
         } catch (Exception $e) {
             error_log("Filter analytics tracking error: " . $e->getMessage());
+            // Silent fail - analytics should never break user experience
         }
     }
 
@@ -316,12 +331,22 @@ class ProductController extends BaseController {
     private function trackSearch($query, $resultCount, $filters) {
         if (empty($query)) return;
 
+        // Sanitize query for storage
+        $query = trim($query);
+        if (strlen($query) > 255) {
+            $query = substr($query, 0, 255);
+        }
+
         try {
             $db = $this->productModel->db;
             $userId = getCurrentUserId();
             $sessionId = session_id();
 
-            $filterJson = json_encode($filters);
+            // Remove sensitive data from filters before storage
+            $safeFilters = $filters;
+            unset($safeFilters['csrf_token']);
+
+            $filterJson = json_encode($safeFilters);
 
             $sql = "INSERT INTO search_history (user_id, session_id, search_term, result_count, filters_used, created_at)
                     VALUES (?, ?, ?, ?, ?, NOW())";
@@ -331,6 +356,7 @@ class ProductController extends BaseController {
 
         } catch (Exception $e) {
             error_log("Search tracking error: " . $e->getMessage());
+            // Silent fail - don't break user experience
         }
     }
 
