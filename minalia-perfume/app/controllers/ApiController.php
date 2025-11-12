@@ -55,10 +55,22 @@ class ApiController extends BaseController {
     public function searchSuggestions() {
         $query = trim($this->get('q', ''));
 
+        // Input validation and sanitization
         if (strlen($query) < 2) {
             $this->json(['success' => false, 'message' => 'Query too short']);
             return;
         }
+
+        if (strlen($query) > 100) {
+            $this->json(['success' => false, 'message' => 'Query too long']);
+            return;
+        }
+
+        // Remove potentially dangerous characters
+        $query = preg_replace('/[<>"\']/', '', $query);
+
+        // Additional XSS protection
+        $query = htmlspecialchars($query, ENT_QUOTES, 'UTF-8');
 
         $db = $this->productModel->db;
 
